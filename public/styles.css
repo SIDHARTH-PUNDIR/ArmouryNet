@@ -1,0 +1,156 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  
+  background: linear-gradient(135deg, #d78136, #e99942,#eba160, #cee2da, #346f4b,#286841,#164528);
+  background-size: 400% 400%;
+  animation: gradientFlow 9s ease infinite;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+
+/* Smooth flowing gradient animation */
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+/* Error Alert */
+  .error-alert {
+  background-color: #dc3545; /* A strong red */
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 30px; /* Space it out from the content below */
+  border: 1px solid #ff7b88;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-box {
+  /* Frosted glass effect with deeper contrast */
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  width: 380px;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.3s;
+}
+
+.login-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.army-logo {
+  width: 120px;
+  margin-bottom: 15px;
+}
+
+h2 {
+  color: #eaf4f4;
+  font-weight: 700;
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  color: #181919;
+  font-size: 15px;
+  margin-bottom: 25px;
+}
+
+form {
+  text-align: left;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+input:focus {
+  border-color: #74c69d;
+  background: rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.remember label {
+  font-size: 13px;
+  font-weight: normal;
+  color: #f0f0f0;
+}
+
+.login-btn {
+  width: 100%;
+  background-color: #081c15;
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #1b4332;
+}
+
+.forgot {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #b7e4c7;
+  text-decoration: none;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArmouryNet Login</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <div class="login-container">
+
+    <div class="login-box">
+      <img src="loginImage.jpg" alt="Indian Army Logo" class="army-logo">
+      <% if (success) { %>
+        <div style="background: rgba(40, 167, 69, 0.2); border: 1px solid #28a745; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            <%= success %>
+        </div>
+      <% } %>
+
+      <% if (error) { %>
+        <div style="background: rgba(220, 53, 69, 0.2); border: 1px solid #dc3545; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            <%= error %>
+        </div>
+      <% } %>
+      <h2>ARMOURYNET</h2>
+      <p class="subtitle">Enter your credentials to access the system</p>
+
+      <form action="/login" method="POST" class="login-form">
+        <label for="personnel">PERSONNEL ID / USERNAME</label>
+        <input type="text" id="username" name="username" placeholder="Enter your personnel ID" required>
+
+        <label for="password">PASSWORD</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+        <button type="submit" class="login-btn">LOGIN TO SYSTEM</button>
+
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="/forgot-password" style="color: #aaa; text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
+      </div>
+      </form>
+    </div>
+  </div>
+  <!-- Jai Hind Soldier Audio -->
+<audio id="welcomeAudio" src="sam.mp3"></audio>
+<script>
+    // This script block handles the audio and the URL cleaning
+    document.addEventListener('DOMContentLoaded', function() {
+        var audio = document.getElementById('welcomeAudio');
+        var loginForm = document.querySelector('.login-form');
+
+        loginForm.addEventListener('submit', function(e) {
+            // Stop the form from submitting instantly
+            e.preventDefault(); 
+            
+            // 2. This function will be called when the audio finishes
+            function submitTheForm() {
+                loginForm.submit();
+            }
+
+            // 3. Add a one-time listener for when the audio ends
+            audio.addEventListener('ended', submitTheForm);
+
+            // 4. Try to play the audio
+            audio.play().catch(err => {
+                // 5. If audio fails to play (e.g., browser blocked it):
+                //    Remove the 'ended' listener and submit the form immediately
+                //    so the user isn't stuck.
+                console.log('Audio failed, logging in immediately.');
+                audio.removeEventListener('ended', submitTheForm);
+                submitTheForm();
+            });
+        });
+    });
+
+    // This URL-cleaning script is correct and will work after we fix app.js
+    const url = new URL(window.location);
+    if (url.searchParams.has('success') || url.searchParams.has('error')) {
+        const cleanPath = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanPath);
+    }
+</script>
+</body>
+</html>

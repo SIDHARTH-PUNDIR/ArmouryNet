@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTO Dashboard – Transport & Logistics</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; transition: all 0.3s ease; }
+  body { background-color: #000; color: #fff; opacity: 0; animation: fadeIn 1s ease forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Header */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; background: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7); border-radius: 0 0 20px 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: bold; color: #fff; }
+  header .nav-links a {
+    margin-left: 20px; padding: 8px 15px; border-radius: 8px;
+    text-decoration: none; color: #fff; font-weight: bold;
+  }
+  header .nav-links a:hover { background: rgba(118,191,65,0.2); color: #76bf41; }
+
+  /* Layout */
+  .dashboard-container { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(20,20,20,0.95); backdrop-filter: blur(12px);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 20px; display: flex; flex-direction: column;
+  }
+  .sidebar h2 { margin-bottom: 20px; font-weight: bold; text-align: center; color: #76bf41; }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li {
+    padding: 12px 10px; margin-bottom: 10px; cursor: pointer;
+    font-weight: bold; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff;
+  }
+  .sidebar ul li:hover { background: rgba(118,191,65,0.2); color: #76bf41; }
+  .sidebar ul li.active { background: rgba(118,191,65,0.3); color: #76bf41; }
+
+  /* Main content */
+  .main-content { padding: 30px; display: flex; flex-direction: column; gap: 40px; }
+
+  .module-section {
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+    border-radius: 25px; padding: 35px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none; transform: translateY(20px); opacity: 0;
+    animation: slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform: translateY(0); opacity: 1; } }
+
+  .module-section h2 { margin-bottom: 25px; font-size: 2rem; color: #76bf41; }
+
+  /* Cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+  .card {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.1);
+    border-radius: 15px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(118,191,65,0.5); }
+
+  /* Button Group */
+  .button-group { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .module-section button, .modal-content button {
+    padding: 14px 25px; border-radius: 12px; border: 2px solid #fff;
+    background: transparent; color: #fff; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(118,191,65,0.4); transition: all 0.3s ease;
+  }
+  .module-section button:hover, .modal-content button:hover {
+    background: rgba(118,191,65,0.3); border-color: #76bf41; transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(118,191,65,0.6);
+  }
+
+  /* Table */
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 20px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 15px;
+  }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background: rgba(255,255,255,0.1); color: #fff; }
+  tr:hover { background: rgba(118,191,65,0.2); color: #76bf41; }
+
+
+  /* Forms */
+  .form-container { max-width: 90%; margin: 20px auto; padding: 20px 0; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { margin-bottom: 8px; font-weight: bold; color: #ccc; }
+  .form-group input, .form-group select { padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; }
+  .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+  .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+
+  /* Modal Styles */
+  .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+  .modal-content { background: rgba(30,30,30,0.95); backdrop-filter: blur(15px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 25px; padding: 35px; width: 60%; max-width: 500px; position: relative; animation: slideFade 0.3s forwards; }
+  .modal-close { color: #aaa; position: absolute; top: 15px; right: 25px; font-size: 28px; font-weight: bold; cursor: pointer; }
+  .modal-close:hover { color: #fff; }
+  #edit-maint-modal .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+
+  /* --- PDF Export Specific Styles --- */
+.pdf-export,
+.pdf-export h3,
+.pdf-export p,
+.pdf-export td,
+.pdf-export th {
+    color: black !important;
+    background: white !important;
+}
+
+
+
+  /* Footer */
+  footer {
+    background: rgba(20,20,20,0.9); backdrop-filter: blur(12px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5); padding: 30px 40px;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+  }
+  footer div h3 { margin-bottom: 10px; color: #76bf41; }
+  footer div ul { list-style: none; }
+  footer div ul li { margin-bottom: 5px; color: #fff; }
+  footer div ul li:hover { color: #76bf41; cursor: pointer; }
+
+  @media(max-width: 900px) { .dashboard-container { grid-template-columns: 1fr; } }
+
+
+  .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+  .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> -MTO Dashboard – Transport & Logistics</h1>
+  <div class="nav-links">
+     <a href="/">Home</a>
+    <a onclick="showSection('reports', this)">Generate Report</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+      <li onclick="showSection('vehicles', this)" class="active">Vehicle Overview</li>
+      <li onclick="showSection('maintenance', this)">Maintenance Schedule</li>
+      <li onclick="showSection('fuel', this)">Fuel & Consumables</li>
+      <li onclick="showSection('assignments', this)">Transport Assignments</li>
+      <li onclick="showSection('reports', this)">Reports</li>
+      <li onclick="showSection('alerts', this)">Alerts</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+
+    <% if (error) { %><div class="error-alert"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert"><%= success %></div><% } %>
+
+    <!-- Vehicle Overview -->
+    <section id="vehicles" class="module-section" style="display:block;">
+      <h2>Vehicle Overview</h2>
+      <div class="card-container">
+       <div class="card"><h3>Total Vehicles</h3><p><%= stats.totalVehicles %> Units</p></div>
+       <div class="card"><h3>Operational</h3><p><%= stats.operational %> Units</p></div>
+       <div class="card"><h3>In Repair</h3><p><%= stats.inRepair %> Units</p></div>
+      </div>
+      <h3>Vehicle Fleet Status</h3>
+      <div class="form-group" style="margin: 20px 0;">
+        <label for="vehicle-search-input" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Fleet:</label>
+        <input type="text" id="vehicle-search-input" placeholder="Search by Vehicle No, Model, or Driver..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+      <table>
+        <thead>
+            <tr><th>Vehicle No.</th><th>Model</th><th>Driver</th><th>Status</th><th>Next Maintenance</th><th>Odometer Reading</th></tr>
+        </thead>
+        <tbody id="vehicle-table-body">
+            <% vehicles.forEach(v => { %>
+            <tr>
+                <td><%= v.vehicle_number %></td>
+                <td><%= v.model %></td>
+                <td><%= v.driver_name || 'N/A' %></td>
+                <td style="color: <%= v.status === 'Operational' ? '#76bf41' : '#dc3545' %>"><%= v.status %></td>
+                <td><%= v.next_maintenance_date %></td>
+                <td><%= v.odometer_reading %> km</td>
+            </tr>
+            <% }) %>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Maintenance Schedule -->
+    <section id="maintenance" class="module-section">
+      <h2>Maintenance Schedule</h2>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="maint-search-input" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Schedule:</label>
+        <input type="text" id="maint-search-input" placeholder="Search by Vehicle No. or Model..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+      <table>
+       <thead>
+       <tr><th>Vehicle No.</th><th>Model</th><th>Next Maintenance</th><th>Status</th><th>Odometer Reading</th><th>Actions</th></tr>
+       </thead>
+        <tbody id="maint-table-body">
+          <% vehicles.forEach(v => { %>
+         <tr>
+              <td><%= v.vehicle_number %></td>
+              <td><%= v.model %></td>
+              <td><%= v.next_maintenance_date %></td>
+              <td style="color: <%= v.status === 'Operational' ? '#76bf41' : '#dc3545' %>"><%= v.status %></td>
+              <td><%= v.odometer_reading %> km</td>
+              <td>
+                <button onclick="editMaintenance(<%= v.mt_id %>)" style="font-size: 14px; padding: 5px 10px;">Update</button>
+              </td>
+          </tr>
+          <% }) %>
+       </tbody>
+      </table>
+    </section>
+
+    <!-- Edit Maintenance Modal -->
+    <div id="edit-maint-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeMaintModal()">&times;</span>
+        <h2>Update Maintenance</h2>
+        <p style="margin-bottom: 20px;">Updating schedule for: <strong id="maint-vehicle-name"></strong></p>
+        
+        <form id="edit-maint-form" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-last-maint">Last Maintenance</label>
+                    <input type="date" id="edit-last-maint" name="last_maintenance">
+                </div>
+                <div class="form-group">
+                    <label for="edit-next-maint">Next Maintenance</label>
+                    <input type="date" id="edit-next-maint" name="next_maintenance">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label for="edit-odometer">Current Odometer (km)</label>
+                  <input type="number" id="edit-odometer" name="odometer_reading">
+                </div>
+                <div class="form-group">
+                    <label for="edit-maint-status">Set Status</label>
+                    <select id="edit-maint-status" name="status" required>
+                        <option value="Operational">Operational</option>
+                        <option value="On-Duty">On-Duty</option>
+                        <option value="In-Repair">In-Repair</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update</button>
+        </form>
+    </div>
+    </div>
+
+
+
+
+
+    <!-- Fuel & Consumables -->
+    <section id="fuel" class="module-section">
+      <h2>Fuel & Consumables</h2>
+      <div class="card-container">
+        <% fuelStock.forEach(fuel => { %>
+        <div class="card">
+            <h3><%= fuel.fuel_type %></h3>
+            <p>Available: <%= fuel.quantity_liters %> L</p>
+            <p style="color: #ffc107;">Low Stock At: <%= fuel.low_stock_threshold %> L</p>
+        </div>
+        <% }) %>
+      </div>
+
+      <div class="form-container">
+      <h3 style="margin-bottom: 20px;">Log Fuel Distribution</h3>
+        <form action="/mto/log-fuel" method="POST">
+         <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="form-group">
+              <label for="mt_id">Select Vehicle</label>
+              <select id="mt_id" name="mt_id" required>
+                  <% vehicles.filter(v => v.status === 'Operational').forEach(v => { %>
+                      <option value="<%= v.mt_id %>"><%= v.vehicle_number %> (<%= v.model %>)</option>
+                  <% }) %>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="fuel_id">Select Fuel Type</label>
+              <select id="fuel_id" name="fuel_id" required>
+                  <% fuelStock.forEach(fuel => { %>
+                      <option value="<%= fuel.fuel_id %>"><%= fuel.fuel_type %></option>
+                  <% }) %>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="quantity_drawn">Quantity Drawn (Liters)</label>
+              <input type="number" step="0.01" id="quantity_drawn" name="quantity_drawn" required>
+          </div>
+          
+          <div class="form-group">
+              <label for="odometer_reading">Odometer Reading (km)</label>
+              <input type="number" id="odometer_reading" name="odometer_reading">
+          </div>
+          </div>
+        <button type="submit" style="margin-top: 20px;">Log Fuel</button>
+      </form>
+      </div>
+
+
+      <!-- Recent Fuel Logs -->
+      <h3 style="margin-top: 30px;">Recent Fuel Logs</h3>
+
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label for="fuel-log-search" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Logs:</label>
+        <input type="text" id="fuel-log-search" placeholder="Search by Vehicle No, Fuel Type, or Odometer..." 
+           style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+      <table>
+      <thead>
+        <tr>
+            <th>Date</th>
+            <th>Vehicle</th>
+            <th>Fuel Type</th>
+            <th>Qty (L)</th>
+            <th>Odometer (km)</th>
+            <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="fuel-log-table-body">
+        <% if (fuelLogs.length > 0) { %>
+            <% fuelLogs.forEach(log => { %>
+                <tr>
+                    <td><%= log.log_date %></td>
+                    <td><%= log.vehicle_number %></td>
+                    <td><%= log.fuel_type %></td>
+                    <td><%= log.quantity_drawn %></td>
+                    <td><%= log.odometer_reading || 'N/A' %></td>
+                    <td>
+                        <a href="/mto/delete-fuel-log/<%= log.log_id %>" 
+                           style="color: #dc3545; text-decoration: none;" 
+                           onclick="return confirm('Are you sure you want to REVERSE this log? This will add the fuel back to stock and reset the odometer.')">Reverse</a>
+                    </td>
+                </tr>
+            <% }) %>
+            <% } else { %>
+            <tr>
+                <td colspan="5" style="text-align: center;">No fuel logs found.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+
+    </section>
+
+    <!-- Transport Assignments -->
+    <section id="assignments" class="module-section">
+      <h2>Transport Assignments</h2>
+      <table>
+        <thead>
+          <tbody>
+          <% vehicles.forEach(v => { %>
+           <tr>
+              <td><%= v.vehicle_number %></td>
+              <td><%= v.model %></td>
+              <td><%= v.driver_name || 'N/A' %></td>
+              <td>
+                <button onclick="assignDriver(<%= v.mt_id %>, '<%= v.driver_name || '' %>')">Assign / Change</button>
+              </td>
+          </tr>
+          <% }) %>
+         </tbody>
+       </table>
+    </section>
+
+    <!-- Assign Driver Modal -->
+    <div id="assign-driver-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2>Assign Driver</h2>
+        
+        <form id="assign-driver-form" method="POST"> <div class="form-group">
+                <label for="driver-select">Select a Driver (from HQ Company):</label>
+                <select id="driver-select" name="driver_id" required>
+                    <option value="">-- Unassign Driver --</option>
+                    <% drivers.forEach(driver => { %>
+                        <option value="<%= driver.soldier_id %>"><%= driver.rank %> <%= driver.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Assign</button>
+        </form>
+      </div>
+      </div>
+
+
+
+
+
+    <!-- Reports -->
+    <section id="reports" class="module-section">
+        <h2>MTO Reports</h2>
+    
+        <div class="filter-bar" style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        
+          <div class="form-group" style="flex: 1; min-width: 300px;">
+            <label for="mto-report-type-select" style="font-weight: bold; margin-bottom: 5px; display: block;">Select Report Type:</label>
+            <select id="mto-report-type-select" style="padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; width: 100%;">
+                <option value="vehicle_status">Vehicle Status Report</option>
+                <option value="fuel_log">Fuel Log Report (All Vehicles)</option>
+            </select>
+          </div>
+        
+          <button id="mto-generate-report-btn" style="align-self: flex-end;">Generate Report</button>
+          <button id="mto-download-pdf-btn" style="align-self: flex-end;">Download as PDF</button>
+        </div>
+    
+          <p>Select a report type and click "Generate Report" to view.</p>
+
+        <div id="mto-report-output-container" style="margin-top: 20px;">
+        </div>
+    </section>
+
+    <!-- Alerts -->
+    <section id="alerts" class="module-section">
+      <h2>Alerts</h2>
+      <table>
+        <thead>
+          <tr><th>Alert Type</th><th>Message</th><th>Date</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <% if (alerts.length > 0) { %>
+            <% alerts.forEach(alert => { %>
+          <tr style="color: <%= alert.alert_type === 'Maintenance Due' ? '#dc3545' : '#ffc107' %>;">
+              <td><%= alert.alert_type %></td>
+              <td><%= alert.message %></td>
+              <td><%= alert.alert_date_formatted %></td>
+              <td><a href="/alert/resolve/<%= alert.alert_id %>" style="color: #76bf41; text-decoration: none;">Dismiss</a></td>
+          </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align: center;">No active alerts.</td></tr>
+          <% } %>
+         </tbody>
+       </table>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Administration</h3>
+    <ul>
+      <li>Transport Policies</li>
+      <li>Approval Requests</li>
+      <li>Vehicle Management</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>Generate Report</li>
+      <li>MTO Approval</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+    // ================================================================================= --
+    // --- 1. ALL FUNCTION DEFINITIONS (Must be defined first) ---
+    // ================================================================================= --
+
+    // Handles switching between sections/tabs
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.module-section').forEach(sec => { sec.style.display = 'none'; });
+        document.getElementById(sectionId).style.display = 'block';
+        document.querySelectorAll('.sidebar ul li').forEach(btn => { btn.classList.remove('active'); });
+        if (element) { element.classList.add('active'); }
+    }
+
+    // --- Vehicle Search Functions ---
+    async function fetchVehicles(searchTerm) {
+        try {
+            const response = await fetch(`/api/search-vehicles?term=${searchTerm}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const vehicles = await response.json();
+            updateVehicleTable(vehicles);
+        } catch (error) {
+            console.error('Error fetching vehicles:', error);
+            vehicleTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Error loading data.</td></tr>';
+        }
+    }
+
+    function updateVehicleTable(vehicles) {
+        vehicleTableBody.innerHTML = ''; 
+        if (vehicles.length === 0) {
+            vehicleTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No vehicles found.</td></tr>';
+            return;
+        }
+        vehicles.forEach(v => {
+            const statusColor = v.status === 'Operational' ? '#76bf41' : '#dc3545';
+            const row = `
+                <tr>
+                    <td>${v.vehicle_number}</td>
+                    <td>${v.model}</td>
+                    <td>${v.driver_name || 'N/A'}</td>
+                    <td style="color: ${statusColor}">${v.status}</td>
+                    <td>${v.next_maintenance_date || 'N/A'}</td>
+                    <td>${v.odometer_reading} km</td>
+                </tr>
+            `;
+            vehicleTableBody.innerHTML += row;
+        });
+    }
+
+
+    // --- Fuel Log Search Functions ---
+async function fetchFuelLogs(searchTerm) {
+    try {
+        const response = await fetch(`/api/search-fuel-logs?term=${searchTerm}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const logs = await response.json();
+        updateFuelLogTable(logs);
+    } catch (error) {
+        console.error('Error fetching fuel logs:', error);
+        fuelLogTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateFuelLogTable(logs) {
+    fuelLogTableBody.innerHTML = ''; 
+    if (logs.length === 0) {
+        fuelLogTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No fuel logs found.</td></tr>';
+        return;
+    }
+
+    logs.forEach(log => {
+        const row = `
+            <tr>
+                <td>${log.log_date}</td>
+                <td>${log.vehicle_number}</td>
+                <td>${log.fuel_type}</td>
+                <td>${log.quantity_drawn}</td>
+                <td>${log.odometer_reading || 'N/A'}</td>
+                <td>
+                    <a href="/mto/delete-fuel-log/${log.log_id}" 
+                       style="color: #dc3545; text-decoration: none;" 
+                       onclick="return confirm('Are you sure?')">Reverse</a>
+                </td>
+            </tr>
+        `;
+        fuelLogTableBody.innerHTML += row;
+    });
+}
+
+    // --- Maintenance Modal Functions ---
+    async function editMaintenance(vehicleId) {
+        try {
+            const response = await fetch(`/api/vehicle/${vehicleId}`); 
+            if (!response.ok) throw new Error('Could not fetch vehicle data');
+            const vehicle = await response.json();
+            
+            document.getElementById('maint-vehicle-name').innerText = `${vehicle.vehicle_number} (${vehicle.model})`;
+            document.getElementById('edit-last-maint').value = vehicle.html_last_maint; 
+            document.getElementById('edit-next-maint').value = vehicle.html_next_maint;
+            document.getElementById('edit-odometer').value = vehicle.odometer_reading;
+            document.getElementById('edit-odometer').min = vehicle.odometer_reading; 
+            document.getElementById('edit-maint-status').value = vehicle.status;
+            
+            editMaintForm.action = `/mto/update-maintenance/${vehicleId}`;
+            editMaintModal.style.display = 'flex';
+        } catch (error) {
+            console.error("Error fetching vehicle for maintenance:", error);
+            alert('Error: Could not load vehicle data.');
+        }
+    }
+
+    function closeMaintModal() {
+        editMaintModal.style.display = 'none';
+    }
+
+    // --- Assign Driver Modal Functions ---
+    function assignDriver(mt_id, currentDriverName) {
+        assignDriverForm.action = `/mto/assign-driver/${mt_id}`;
+        driverSelect.value = ""; // Default to 'Unassign'
+        assignDriverModal.style.display = 'flex';
+    }
+
+    function closeDriverModal() {
+        assignDriverModal.style.display = 'none';
+    }
+
+    // --- Odometer Update Function ---
+    function updateOdometer() {
+        const selectedVehicleId = fuelVehicleSelect.value;
+        const selectedVehicle = allVehiclesData.find(v => v.mt_id == selectedVehicleId);
+        
+        if (selectedVehicle) {
+            odometerInput.value = selectedVehicle.odometer_reading;
+            odometerInput.placeholder = `Last known: ${selectedVehicle.odometer_reading} km`;
+            odometerInput.min = selectedVehicle.odometer_reading;
+        } else {
+            odometerInput.value = '';
+            odometerInput.placeholder = 'N/A';
+            odometerInput.min = 0;
+        }
+    }
+
+    // --- MTO Report Functions ---
+    async function fetchMtoReport() {
+        const reportType = mtoReportTypeSelect.value;
+        mtoReportOutputContainer.innerHTML = '<p>Generating report...</p>';
+        
+        try {
+            const response = await fetch(`/api/mto-report?type=${reportType}`);
+            if (!response.ok) throw new Error('Could not fetch report data');
+            
+            const result = await response.json();
+            buildMtoReportTable(result.reportType, result.data);
+
+        } catch (error) {
+            console.error('Error generating report:', error);
+            mtoReportOutputContainer.innerHTML = '<p style="color: #dc3545;">Error: Could not load report.</p>';
+        }
+    }
+
+    function buildMtoReportTable(type, data) {
+        let tableHTML = '';
+        
+        if (type === 'vehicle_status') {
+            tableHTML = `<h3>Vehicle Status Report (${data.length} Vehicles)</h3>`;
+            tableHTML += '<table><thead><tr><th>Vehicle No.</th><th>Model</th><th>Driver</th><th>Status</th><th>Next Maint.</th><th>Odometer (km)</th></tr></thead><tbody>';
+            data.forEach(v => {
+                tableHTML += `<tr>
+                                <td>${v.vehicle_number}</td>
+                                <td>${v.model}</td>
+                                <td>${v.driver_name || 'N/A'}</td>
+                                <td style="font-weight: bold; color: ${v.status === 'Operational' ? '#76bf41' : '#dc3545'}">${v.status}</td>
+                                <td>${v.next_maintenance_date || 'N/A'}</td>
+                                <td>${v.odometer_reading}</td>
+                              </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            
+        } else if (type === 'fuel_log') {
+            tableHTML = `<h3>Fuel Log Report (${data.length} entries)</h3>`;
+            tableHTML += '<table><thead><tr><th>Date</th><th>Vehicle</th><th>Fuel Type</th><th>Qty (L)</th><th>Odometer (km)</th></tr></thead><tbody>';
+            if (data.length > 0) {
+                data.forEach(log => {
+                    tableHTML += `<tr>
+                                    <td>${log.log_date}</td>
+                                    <td>${log.vehicle_number}</td>
+                                    <td>${log.fuel_type}</td>
+                                    <td>${log.quantity_drawn}</td>
+                                    <td>${log.odometer_reading || 'N/A'}</td>
+                                  </tr>`;
+                });
+            } else {
+                tableHTML += '<tr><td colspan="5" style="text-align: center;">No fuel logs found.</td></tr>';
+            }
+            tableHTML += '</tbody></table>';
+        }
+        
+        mtoReportOutputContainer.innerHTML = tableHTML;
+    }
+
+    function downloadMtoReportAsPDF() {
+        const element = document.getElementById('mto-report-output-container');
+        if (!element.querySelector('table')) {
+            alert('Please generate a report first before downloading.');
+            return;
+        }
+        
+        const reportName = mtoReportTypeSelect.options[mtoReportTypeSelect.selectedIndex].text.replace(/\s+/g, '_');
+        const filename = `${reportName}.pdf`;
+
+        const options = {
+            margin:       [0.5, 0.5, 0.5, 0.5],
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // Set to landscape
+        };
+
+        element.classList.add('pdf-export');
+        
+        html2pdf().from(element).set(options).save().then(() => {
+            element.classList.remove('pdf-export');
+        }).catch((err) => {
+            console.error('PDF generation failed:', err);
+            element.classList.remove('pdf-export');
+        });
+    }
+
+
+    async function fetchMaintenance(searchTerm) {
+    try {
+        // We re-use the main vehicle search API
+        const response = await fetch(`/api/search-vehicles?term=${searchTerm}`); 
+        if (!response.ok) throw new Error('Network response was not ok');
+        const vehicles = await response.json();
+        updateMaintenanceTable(vehicles); // This will update the maintenance table
+    } catch (error) {
+        console.error('Error fetching maintenance:', error);
+        maintTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateMaintenanceTable(vehicles) {
+    maintTableBody.innerHTML = ''; 
+    if (vehicles.length === 0) {
+        maintTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No vehicles found.</td></tr>';
+        return;
+    }
+    vehicles.forEach(v => {
+        const statusColor = v.status === 'Operational' ? '#76bf41' : '#dc3545';
+        const row = `
+            <tr>
+                <td>${v.vehicle_number}</td>
+                <td>${v.model}</td>
+                <td>${v.next_maintenance_date}</td>
+                <td style="color: ${statusColor}">${v.status}</td>
+                <td>${v.odometer_reading} km</td>
+                <td>
+                    <button onclick="editMaintenance(${v.mt_id})" style="font-size: 14px; padding: 5px 10px;">Update</button>
+                </td>
+            </tr>
+        `;
+        maintTableBody.innerHTML += row;
+    });
+}
+
+
+    // ================================================================================= --
+    // --- 2. GLOBAL VARIABLES ---
+    // ================================================================================= --
+    
+    let vehicleSearchInput, vehicleTableBody;
+    let fuelLogSearchInput, fuelLogTableBody;
+    let assignDriverModal, assignDriverForm, driverSelect;
+    let editMaintModal, editMaintForm;
+    let allVehiclesData;
+    let fuelVehicleSelect;
+    let odometerInput;
+    let mtoGenerateReportBtn, mtoDownloadPdfBtn, mtoReportOutputContainer, mtoReportTypeSelect;
+    let maintSearchInput, maintTableBody;
+
+    // ================================================================================= --
+    // --- 3. PAGE LOAD EVENT LISTENER (This is where all setup happens) ---
+    // ================================================================================= --
+    
+    window.addEventListener("load", () => {
+        
+        // Store all vehicle data
+        allVehiclesData = <%- JSON.stringify(vehicles) %>;
+
+        // --- Fade-in & URL-cleaning ---
+        document.body.style.opacity = 0;
+        document.body.style.transition = "opacity 1.2s ease-in-out";
+        document.body.style.opacity = 1;
+        const url = new URL(window.location);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            const cleanPath = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanPath);
+        }
+
+        // --- Vehicle Search Logic ---
+        vehicleSearchInput = document.getElementById('vehicle-search-input');
+        vehicleTableBody = document.getElementById('vehicle-table-body');
+        if (vehicleSearchInput) {
+            vehicleSearchInput.addEventListener('keyup', () => {
+                fetchVehicles(vehicleSearchInput.value);
+            });
+        }
+
+        // --- Fuel Log Search Logic ---
+        fuelLogSearchInput = document.getElementById('fuel-log-search');
+        fuelLogTableBody = document.getElementById('fuel-log-table-body');
+        if (fuelLogSearchInput) {
+          fuelLogSearchInput.addEventListener('keyup', () => {
+            fetchFuelLogs(fuelLogSearchInput.value);
+          });
+        }
+
+        // --- Assign Driver Modal Logic ---
+        assignDriverModal = document.getElementById('assign-driver-modal');
+        assignDriverForm = document.getElementById('assign-driver-form');
+        driverSelect = document.getElementById('driver-select');
+
+        // --- Maintenance Modal Logic ---
+        editMaintModal = document.getElementById('edit-maint-modal');
+        editMaintForm = document.getElementById('edit-maint-form');
+        
+        // --- Fuel Log Odometer Logic ---
+        fuelVehicleSelect = document.getElementById('mt_id');
+        odometerInput = document.getElementById('odometer_reading');
+        if (fuelVehicleSelect) {
+            fuelVehicleSelect.addEventListener('change', updateOdometer);
+            updateOdometer(); // Run once on load
+        }
+
+        // --- MTO Reports Logic ---
+        mtoGenerateReportBtn = document.getElementById('mto-generate-report-btn');
+        mtoDownloadPdfBtn = document.getElementById('mto-download-pdf-btn');
+        mtoReportOutputContainer = document.getElementById('mto-report-output-container');
+        mtoReportTypeSelect = document.getElementById('mto-report-type-select');
+
+        if (mtoGenerateReportBtn) {
+            mtoGenerateReportBtn.addEventListener('click', fetchMtoReport);
+        }
+        if (mtoDownloadPdfBtn) {
+            mtoDownloadPdfBtn.addEventListener('click', downloadMtoReportAsPDF);
+        }
+
+        // --- Maintenance Search Logic ---
+        maintSearchInput = document.getElementById('maint-search-input');
+        maintTableBody = document.getElementById('maint-table-body');
+        if (maintSearchInput) {
+          maintSearchInput.addEventListener('keyup', () => {
+            fetchMaintenance(maintSearchInput.value);
+          });
+        }
+
+
+        // --- Main Click Handler for Modals ---
+        window.onclick = function(event) {
+            if (event.target == assignDriverModal) {
+                closeDriverModal();
+            }
+            if (event.target == editMaintModal) {
+                closeMaintModal();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

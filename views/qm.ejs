@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quartermaster Dashboard – Logistics & Supply</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; transition: all 0.3s ease; }
+  body { background-color: #000; color: #fff; opacity: 0; animation: fadeIn 1s ease forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Header */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; background: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7); border-radius: 0 0 20px 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: bold; color: #fff; }
+  header .nav-links a {
+    margin-left: 20px; padding: 8px 15px; border-radius: 8px;
+    text-decoration: none; color: #fff; font-weight: bold;
+  }
+  header .nav-links a:hover { background: rgba(69,183,233,0.2); color: #45b7e9; }
+
+  /* Layout */
+  .dashboard-container { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(20,20,20,0.95); backdrop-filter: blur(12px);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 20px; display: flex; flex-direction: column;
+  }
+  .sidebar h2 { margin-bottom: 20px; font-weight: bold; text-align: center; color: #45b7e9; }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li {
+    padding: 12px 10px; margin-bottom: 10px; cursor: pointer;
+    font-weight: bold; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff;
+  }
+  .sidebar ul li:hover { background: rgba(69,183,233,0.2); color: #45b7e9; }
+  .sidebar ul li.active { background: rgba(69,183,233,0.3); color: #45b7e9; }
+
+  /* Main content */
+  .main-content { padding: 30px; display: flex; flex-direction: column; gap: 40px; }
+
+  .module-section {
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+    border-radius: 25px; padding: 35px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none; transform: translateY(20px); opacity: 0;
+    animation: slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform: translateY(0); opacity: 1; } }
+
+  .module-section h2 { margin-bottom: 25px; font-size: 2rem; color: #45b7e9; }
+
+  /* Cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.1);
+    border-radius: 15px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(69,183,233,0.5); }
+
+  /* Button Group */
+  .button-group { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .module-section button, .modal-content button {
+    padding: 14px 25px; border-radius: 12px; border: 2px solid #fff;
+    background: transparent; color: #fff; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(69,183,233,0.4); transition: all 0.3s ease;
+  }
+  .module-section button:hover, .modal-content button:hover {
+    background: rgba(69,183,233,0.3); border-color: #45b7e9; transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(69,183,233,0.6);
+  }
+
+  /* Table */
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 20px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 15px;
+  }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background: rgba(255,255,255,0.1); color: #fff; }
+  tr:hover { background: rgba(69,183,233,0.2); color: #45b7e9; }
+
+  /* Forms */
+
+  .form-container { max-width: 90%; margin: 20px auto; padding: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: bold; color: #ccc; }
+        .form-group input, .form-group select { padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; }
+        .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+
+
+/* --- Styles for Modal --- */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    /* Center the content */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-radius: 25px;
+    padding: 35px;
+    width: 60%;
+    max-width: 700px;
+    position: relative;
+    animation: slideFade 0.3s forwards;
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
+
+
+#edit-weapon-modal .form-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* --- PDF Export Specific Styles --- */
+/* Forces text to be black when exporting to PDF */
+.pdf-export,
+.pdf-export h1,
+.pdf-export h2,
+.pdf-export h3,
+.pdf-export h4,
+.pdf-export p,
+.pdf-export td,
+.pdf-export th,
+.pdf-export a {
+    color: black !important;
+}
+
+/* Ensure background is white for tables/containers if needed, though usually not an issue */
+.pdf-export table,
+.pdf-export tr,
+.pdf-export td,
+.pdf-export th {
+    background-color: white !important;
+}
+
+
+  /* Footer */
+  footer {
+    background: rgba(20,20,20,0.9); backdrop-filter: blur(12px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5); padding: 30px 40px;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+  }
+  footer div h3 { margin-bottom: 10px; color: #45b7e9; }
+  footer div ul { list-style: none; }
+  footer div ul li { margin-bottom: 5px; color: #fff; }
+  footer div ul li:hover { color: #45b7e9; cursor: pointer; }
+
+  @media(max-width: 900px) { .dashboard-container { grid-template-columns: 1fr; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> - Quartermaster Dashboard – Logistics & Supply</h1>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a onclick="showSection('reports', this)">Generate Report</a>
+    <a href="#">Request Approval</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+      <li onclick="showSection('inventory', this)" class="active">Inventory Overview</li>
+      <li onclick="showSection('weapons', this)">Weapons Management</li>
+      <li onclick="showSection('ammo', this)">Ammunition Management</li>
+      <li onclick="showSection('add-battalion-stock', this)">Add Battalion Stock</li>
+      <li onclick="showSection('distribute-rations', this)">Distribute Rations</li>
+      <li onclick="showSection('ration-logs', this)">Ration Logs</li>
+      <li onclick="showSection('fuel', this)">Fuel</li>
+      <li onclick="showSection('vehicles', this)">Vehicles</li>
+      <li onclick="showSection('reports', this)">Inventory Reports</li>
+      <li onclick="showSection('alerts', this)">Stock Alerts</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+
+    <% if (error) { %><div class="error-alert"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert"><%= success %></div><% } %>
+
+
+
+<!-- Inventory Overview -->
+
+    <section id="inventory" class="module-section" style="display:block;">
+      <h2>Inventory Overview</h2>
+      <div class="card-container">
+          <div class="card"><h3>Total Weapons</h3><p><%= weapons.length %> Units</p></div>
+          <div class="card"><h3>Ammunition Types</h3><p><%= ammunition.length %> Types</p></div>
+          <div class="card"><h3>Ration Types</h3><p><%= battalionRations.length %> Items</p></div>
+          <div class="card"><h3>Vehicles</h3><p><%= vehicles.length %> Units</p></div>
+        </div>
+    </section>
+
+
+
+
+
+
+
+
+
+<!-- Weapons Management -->
+
+    <section id="weapons" class="module-section">
+      <h2>Weapons Management</h2>
+      <div class="button-group">
+          <div class="form-container" style="padding: 0; margin: 20px 0;">
+            <h3 style="margin-top: 30px; margin-bottom: 30px;">Add New Weapon</h3>
+            <form action="/qm/add-weapon" method="POST">
+              <div class="form-grid">
+                <div class="form-group">
+                    <label for="serial_number">Serial No.</label>
+                    <input type="text" id="serial_number" name="serial_number" required>
+                </div>
+                <div class="form-group">
+                  <label for="type"> Type </label>
+                  <input type="text" id="type" name="type" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" name="model" required>
+                </div>
+                <div class="form-group">
+                    <label for="assigned_company_id">Assigned Company Id</label>
+                    <select id="assigned_company_id" name="assigned_company_id" required>
+                      <% companies.forEach(company => { %>
+                        <option value="<%= company.company_id %>">
+                          <%= company.company_name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                </div>
+              </div>
+              <button type="submit" style="margin-top: 20px;">Add Weapon</button>
+            </form>
+          </div>
+      </div>
+      <table>
+        <thead><tr><th>Serial No.</th><th>Model</th><th>Assigned To</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+              <% weapons.forEach(weapon => { %>
+              <tr>
+                  <td><%= weapon.serial_number %></td>
+                  <td><%= weapon.model %></td>
+                  <td><%= weapon.assigned_to %></td>
+                  <td style="color: <%= weapon.status === 'In-Store' ? '#45b7e9' : (weapon.status === 'Issued' ? '#28a745' : '#dc3545') %>">
+                      <%= weapon.status %>
+                  </td>
+                  <td>
+                    <button onclick="editWeapon(<%= weapon.asset_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                    <a href="/qm/delete-weapon/<%= weapon.asset_id %>" 
+                       style="color: #dc3545; text-decoration: none; margin-left: 10px;" 
+                       onclick="return confirm('Are you sure you want to permanently REMOVE this weapon? This cannot be undone.')">Remove</a>
+                  </td>
+              </tr>
+              <% }) %>
+          </tbody>
+      </table>
+    </section>
+
+<!-- Edit Weapon Modal -->
+    <div id="edit-weapon-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeWeaponModal()">&times;</span>
+        <h2>Edit Weapon Details</h2>
+        
+        <form id="edit-weapon-form" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-serial_number">Serial No.</label>
+                    <input type="text" id="edit-serial_number" name="serial_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-type">Type</label>
+                    <input type="text" id="edit-type" name="type" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-model">Model</label>
+                    <input type="text" id="edit-model" name="model" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-assigned_company_id">Assigned Company</label>
+                    <select id="edit-assigned_company_id" name="assigned_company_id" required>
+                        <% companies.forEach(company => { %>
+                            <option value="<%= company.company_id %>"><%= company.company_name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-status">Status</label>
+                    <select id="edit-status" name="status" required>
+                        <option value="In-Store">In-Store</option>
+                        <option value="Issued">Issued</option>
+                        <option value="In-Repair">In-Repair</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update Weapon</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- Ammunition Management -->
+
+    <section id="ammo" class="module-section">
+      <h2>Ammunition Management</h2>
+      <div class="button-group">
+        <div class="form-container" style="padding: 0; margin: 20px 0;">
+            <h3 style="margin-top: 30px; margin-bottom: 30px;">Add New Ammunition</h3>
+            <form action="/qm/add-ammo" method="POST">
+              <div class="form-grid">
+                <div class="form-group">
+                    <label for="ammo_type">Ammo Type</label>
+                    <input type="text" id="ammo_type" name="ammo_type" required>
+                </div>
+                <div class="form-group">
+                  <label for="quantity"> Quantity  </label>
+                  <input type="number" id="quantity" name="quantity" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="lot_number">Lot No.</label>
+                    <input type="text" id="lot_number" name="lot_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="expiry_date">Expiry Date</label>
+                    <input type="date" id="expiry_date" name="expiry_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Alert (units)</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="0">
+                </div>
+              </div>
+              <button type="submit" style="margin-top: 20px;">Add Ammunition</button>
+            </form>
+          </div>
+      </div>
+      <table>
+          <thead><tr><th>Lot Number</th><th>Ammo Type</th><th>Quantity</th><th>Expiry Date</th><th>Actions</th></tr></thead>
+          <tbody>
+              <% ammunition.forEach(ammo => { %>
+              <tr>
+                  <td><%= ammo.lot_number %></td>
+                  <td><%= ammo.ammo_type %></td>
+                  <td><%= ammo.quantity %></td>
+                  <td><%= ammo.expiry_date_f %></td>
+                  <td>
+                    <button onclick="editAmmoItem(<%= ammo.ammo_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                    <a href="/qm/delete-ammo/<%= ammo.ammo_id %>" 
+                       style="color: #dc3545; text-decoration: none; margin-left: 10px;" 
+                       onclick="return confirm('Are you sure? This can only be done if quantity is 0.')">Delete</a>
+                  </td>
+              </tr>
+              <% }) %>
+          </tbody>
+      </table>
+    </section>
+
+<!-- Edit Ammo Modal -->
+    <div id="edit-ammo-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeAmmoModal()">&times;</span>
+        <h2>Edit Ammunition Batch</h2>
+        
+        <form id="edit-ammo-form" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-ammo-type">Ammo Type</label>
+                    <input type="text" id="edit-ammo-type" name="ammo_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ammo-lot">Lot Number</label>
+                    <input type="text" id="edit-ammo-lot" name="lot_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ammo-quantity">Quantity</label>
+                    <input type="number" id="edit-ammo-quantity" name="quantity" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ammo-expiry">Expiry Date</label>
+                    <input type="date" id="edit-ammo-expiry" name="expiry_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ammo-low-stock">Low Stock Alert (Units)</label>
+                    <input type="number" id="edit-ammo-low-stock" name="low_stock_threshold" value="0">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update Ammo Batch</button>
+        </form>
+    </div>
+    </div>
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+<!-- Rations -->
+
+    <section id="add-battalion-stock" class="module-section">
+    <h2>Battalion Rations Stock</h2>
+
+    <h3>Current Battalion Stock</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity (kg)</th>
+                <th>Expiry</th>
+                <th>Low Stock At (kg)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% battalionRations.forEach(ration => { %>
+                <tr>
+                    <td><%= ration.item_name %></td>
+                    <td><%= ration.quantity_kg %></td>
+                    <td><%= ration.expiry_date_f || 'N/A' %></td>
+                    <td><%= ration.low_stock_threshold %></td>
+                    <td>
+                    <button onclick="editStockItem(<%= ration.stock_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                    <a href="/qm/delete-stock/<%= ration.stock_id %>" 
+                       style="color: #dc3545; text-decoration: none; margin-left: 10px;" 
+                       onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <h3 style="margin-top: 30px;">Add New Stock to Battalion Store</h3>
+    <div class="form-container" style="padding: 0; margin: 20px 0;">
+        <form action="/qm/add-stock" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="item_name">Item Name</label>
+                    <input type="text" id="item_name" name="item_name" required>
+                </div>
+                <div class="form-group">
+                  <label for="lot_number">Lot Number (or Batch ID)</label>
+                  <input type="text" id="lot_number" name="lot_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity (kg)</label>
+                    <input type="number" step="0.01" id="quantity" name="quantity" required>
+                </div>
+                <div class="form-group">
+                    <label for="expiry_date">Expiry Date</label>
+                    <input type="date" id="expiry_date" name="expiry_date">
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Alert (kg)</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="0">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Add to Battalion Stock</button>
+        </form>
+    </div>
+</section>
+
+
+<!-- Distribute Rations -->
+
+  <section id="distribute-rations" class="module-section">
+    <h2>Distribute Rations to Companies</h2>
+    
+    <div class="form-container" style="padding: 0; margin: 0;">
+        <form action="/qm/distribute-rations" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                  <label for="stock_id">Select Item Batch to Distribute</label>
+                  <select id="stock_id" name="stock_id" required>
+                    <% battalionRations.forEach(ration => { %>
+                    <% if (ration.quantity_kg > 0) { %>  <option value="<%= ration.stock_id %>">
+                    <%= ration.item_name %> (Lot: <%= ration.lot_number %>) - Stock: <%= ration.quantity_kg %>kg
+                    </option>
+                    <% } %> <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                    <label for="company_id">Select Company</label>
+                    <select id="company_id" name="company_id" required>
+                        <% companies.forEach(company => { %>
+                            <option value="<%= company.company_id %>"><%= company.company_name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity to Distribute (kg)</label>
+                    <input type="number" step="0.01" id="quantity" name="quantity" required>
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Distribute Stock</button>
+        </form>
+    </div>
+
+    <h3 style="margin-top: 30px;">Current Company-Level Stock</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Assigned Company</th><th>Quantity (kg)</th><th>Expiry</th><th>Actions</th></tr></thead>
+      <tbody id="company-stock-table-body">
+        <% companyRations.forEach(ration => { %> 
+            <tr>
+                <td><%= ration.item_name %></td>
+                <td><%= ration.lot_number %></td>
+                <td><%= ration.company_name %></td> 
+                <td><%= ration.quantity_kg %></td>
+                <td><%= ration.expiry_date_f || 'N/A' %></td>
+                <td>
+                <a href="/qm/revert-stock/<%= ration.ration_id %>" 
+                   style="color: #dc3545; text-decoration: none;" 
+                   onclick="return confirm('Are you sure?')">Revert</a>
+                </td>
+            </tr>
+        <% }) %>
+        <% if (companyRations.length === 0) { %>
+            <tr><td colspan="4" style="text-align: center;">No rations have been distributed yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+</section>
+
+
+<section id="ration-logs" class="module-section">
+    <h2>Ration Distribution Logs</h2>
+    <h3 style="margin-top: 30px; color: #45b7e9;">Distribution History Log</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Lot</th>
+                <th>Company</th>
+                <th>Action</th>
+                <th>Qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (rationLogs && rationLogs.length > 0) { %>
+                <% rationLogs.forEach(log => { %>
+                    <tr>
+                        <td><%= log.date_f %></td>
+                        <td><%= log.item_name %></td>
+                        <td><%= log.lot_number %></td>
+                        <td><%= log.company_name %></td>
+                        <td><%= log.transaction_type.replace(/_/g, ' ') %></td>
+                        <td style="font-weight: bold; color: <%= log.transaction_type === 'Received_from_QM' ? '#28a745' : '#dc3545' %>">
+                            <%= log.quantity_change > 0 ? '+' : '' %><%= log.quantity_change %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr><td colspan="6" style="text-align: center;">No distribution history found.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
+
+
+<!-- Edit Stock Modal -->
+
+<div id="edit-stock-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2>Edit Battalion Stock Item</h2>
+        
+        <form id="edit-stock-form" action="/qm/update-stock" method="POST">
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+                
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="edit-item-name" name="item_name" readonly style="background: #222; color: #aaa;">
+                </div>
+
+                <div class="form-group">
+                  <label for="edit-quantity">Quantity (kg)</label>
+                  <input type="number" step="0.01" id="edit-quantity" name="quantity_kg">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-expiry-date">Expiry Date</label>
+                    <input type="date" id="edit-expiry-date" name="expiry_date">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-low-stock">Low Stock Alert (kg)</label>
+                    <input type="number" id="edit-low-stock" name="low_stock_threshold">
+                </div>
+            </div>
+            <button type="submit" class="button-group">Update Stock Item</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- Fuel Management -->
+
+    <section id="fuel" class="module-section">
+      <h2>Fuel Management</h2>
+        <div class="button-group">
+        <div class="form-container" style="padding: 0; margin: 20px 0;">
+        <h3 style="margin-bottom: 20px;">Add New Fuel / Top Up Stock</h3>
+        <form action="/qm/add-fuel" method="POST">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="form-group">
+                    <label for="fuel_type">Fuel Type (e.g., Diesel)</label>
+                    <input type="text" id="fuel_type" name="fuel_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity to Add (Liters)</label>
+                    <input type="number" step="0.01" id="quantity" name="quantity" required>
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Alert (Liters)</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="500">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Add/Update Stock</button>
+        </form>
+        </div>
+      </div>
+      <table>
+          <thead><tr><th>Item</th><th>Quantity (Liters)</th><th>Low Stock Alert (Liters)</th><th>Actions</th></tr></thead>
+          <tbody>
+              <% fuel.forEach(f => { %>
+              <tr>
+                  <td><%= f.fuel_type %></td>
+                  <td><%= f.quantity_liters %></td>
+                  <td><%= f.low_stock_threshold %></td>
+                  <td>
+                    <button onclick="editFuelItem(<%= f.fuel_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                    <a href="/qm/delete-fuel/<%= f.fuel_id %>" 
+                       style="color: #dc3545; text-decoration: none; margin-left: 10px;" 
+                       onclick="return confirm('Are you sure? This can only be done if quantity is 0.')">Delete</a>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+      </table>
+    </section>
+
+<!-- Edit Fuel Modal -->
+    <div id="edit-fuel-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeFuelModal()">&times;</span>
+        <h2>Edit Fuel Stock</h2>
+        
+        <form id="edit-fuel-form" method="POST">
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+                <div class="form-group">
+                    <label for="edit-fuel-type">Fuel Type</label>
+                    <input type="text" id="edit-fuel-type" name="fuel_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-fuel-quantity">Total Quantity (Liters)</label>
+                    <input type="number" step="0.01" id="edit-fuel-quantity" name="quantity_liters" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-fuel-low-stock">Low Stock Alert (Liters)</label>
+                    <input type="number" id="edit-fuel-low-stock" name="low_stock_threshold">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update Fuel Item</button>
+        </form>
+    </div>
+    </div>
+
+
+
+
+
+
+
+
+<!-- Vehicles Management -->
+
+    <section id="vehicles" class="module-section">
+      <h2>Vehicles</h2>
+      <div class="form-container" style="padding: 0; margin: 20px 0;">
+        <h3 style="margin-bottom: 20px;">Add New Vehicle</h3>
+        <form action="/qm/add-vehicle" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="vehicle_number">Vehicle Number</label>
+                    <input type="text" id="vehicle_number" name="vehicle_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type (e.g., GS 4x4)</label>
+                    <input type="text" id="type" name="type" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model (e.g., Tata Safari)</label>
+                    <input type="text" id="model" name="model" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_maintenance">Last Maintenance</label>
+                    <input type="date" id="last_maintenance" name="last_maintenance">
+                </div>
+                <div class="form-group">
+                    <label for="next_maintenance">Next Maintenance</label>
+                    <input type="date" id="next_maintenance" name="next_maintenance">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Add Vehicle to Store</button>
+        </form>
+    </div>
+      <table>
+          <thead><tr><th>Vehicle No.</th><th>Model</th><th>Driver</th><th>Status</th><th>Next Maintenance</th><th>Actions</th></tr></thead>
+          <tbody>
+              <% vehicles.forEach(v => { %>
+              <tr>
+                  <td><%= v.vehicle_number %></td>
+                  <td><%= v.model %></td>
+                  <td><%= v.driver_name || 'N/A' %></td>
+                  <td style="color: <%= v.status === 'Operational' ? '#28a745' : '#dc3545' %>">
+                      <%= v.status %>
+                  </td>
+                  <td><%= v.next_maintenance_date %></td>
+                  <td>
+                    <button onclick="editVehicle(<%= v.mt_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                    <a href="/qm/decommission-vehicle/<%= v.mt_id %>" 
+                       style="color: #dc3545; text-decoration: none; margin-left: 10px;" 
+                       onclick="return confirm('Are you sure? This will set the vehicle to In-Repair and unassign the driver.')">Decommission</a>
+                  </td>
+              </tr>
+              <% }) %>
+          </tbody>
+      </table>
+    </section>
+
+<!-- Edit Vehicle Modal -->
+<div id="edit-vehicle-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeVehicleModal()">&times;</span>
+        <h2>Edit Vehicle Details</h2>
+        
+        <form id="edit-vehicle-form" method="POST" action="/qm/update-vehicle" >
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label for="edit-vehicle-number">Vehicle Number</label>
+                    <input type="text" id="edit-vehicle-number" name="vehicle_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-vehicle-model">Model</label>
+                    <input type="text" id="edit-vehicle-model" name="model" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-vehicle-type">Type</label>
+                    <input type="text" id="edit-vehicle-type" name="type" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-driver-id">Driver ID (Optional)</label>
+                    <input type="text" id="edit-driver-id" name="driver_id">
+                </div>
+                <div class="form-group">
+                    <label for="edit-vehicle-status">Status</label>
+                    <select id="edit-vehicle-status" name="status" required>
+                        <option value="Operational">Operational</option>
+                        <option value="On-Duty">On-Duty</option>
+                        <option value="In-Repair">In-Repair</option>
+                    </select>
+                </div>
+                <div class="form-group"></div> <div class="form-group">
+                    <label for="edit-last-maint">Last Maintenance</label>
+                    <input type="date" id="edit-last-maint" name="last_maintenance">
+                </div>
+                <div class="form-group">
+                    <label for="edit-next-maint">Next Maintenance</label>
+                    <input type="date" id="edit-next-maint" name="next_maintenance">
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update Vehicle</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- Inventory Reports -->
+
+    <section id="reports" class="module-section">
+    <h2>Inventory Reports</h2>
+    
+    <div class="filter-bar" style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        
+        <div class="form-group" style="flex: 1; min-width: 300px;">
+            <label for="report-type-select" style="font-weight: bold; margin-bottom: 5px; display: block;">Select Report Type:</label>
+            <select id="report-type-select" style="padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; width: 100%;">
+                <option value="stock">Full Battalion Stock Report</option>
+                <option value="alerts">Active Stock & Maintenance Alerts</option>
+                <option value="distribution_log">Ration Distribution Log</option>
+            </select>
+        </div>
+        
+        <button id="generate-report-btn" style="align-self: flex-end;">Generate Report</button>
+        <button id="download-pdf-btn" style="align-self: flex-end;">Download as PDF</button>
+    </div>
+    
+    <p>Select a report type and click "Generate Report" to view.</p>
+    <div id="report-output-container" style="margin-top: 20px;">
+    </div>
+    </section>
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+<!-- Stock Alerts -->
+
+    <section id="alerts" class="module-section">
+      <h2>Stock Alerts</h2>
+      <table>
+          <thead><tr><th>Alert Type</th><th>Message</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>
+              <% if (alerts.length > 0) { %>
+                  <% alerts.forEach(alert => { %>
+                  <tr style="color: <%= alert.alert_type === 'Expiry' ? '#dc3545' : '#ffc107' %>;">
+                      <td><%= alert.alert_type %></td>
+                      <td><%= alert.message %></td>
+                      <td><%= alert.alert_date_formatted %></td>
+                      <td>
+                        <a href="/alert/resolve/<%= alert.alert_id %>" style="color: #45b7e9; text-decoration: none;">Dismiss</a>
+                      </td>
+                  </tr>
+                  <% }) %>
+              <% } else { %>
+                  <tr>
+                      <td colspan="3" style="text-align: center;">No active stock alerts.</td>
+                  </tr>
+              <% } %>
+          </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Administration</h3>
+    <ul>
+      <li>Inventory Policies</li>
+      <li>Approval Requests</li>
+      <li>Stock Management</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>Generate Report</li>
+      <li>CO Approval</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+    // --- 1. ALL FUNCTION DEFINITIONS ---
+    // These must be defined first, so they can be called by other scripts.
+
+    // Handles switching between sections
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.module-section').forEach(sec => {
+            sec.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+        
+        document.querySelectorAll('.sidebar ul li').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (element) {
+            element.classList.add('active');
+        }
+    }
+
+    // Opens and populates the "Edit Stock" modal
+    async function editStockItem(stockId) { // <-- Now accepts stockId
+    try {
+        // UPDATED: Call API with stock_id
+        const response = await fetch(`/api/stock-item/${stockId}`);
+        if (!response.ok) throw new Error('Could not fetch stock item');
+        
+        const item = await response.json();
+        
+        // Populate the modal form
+        document.getElementById('edit-item-name').value = item.item_name;
+        // UPDATED: Use the new html_expiry_date field
+        document.getElementById('edit-expiry-date').value = item.html_expiry_date; 
+        document.getElementById('edit-low-stock').value = item.low_stock_threshold;
+        document.getElementById('edit-quantity').value = item.quantity_kg; 
+        
+        // UPDATED: Set the form's action URL
+        editStockForm.action = `/qm/update-stock/${stockId}`;
+        
+        editStockModal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error("Error fetching stock item:", error);
+        alert('Error: Could not load item data.');
+    }
+}
+
+// Opens and populates the "Edit Weapon" modal
+async function editWeapon(weaponId) {
+    try {
+        const response = await fetch(`/api/weapon/${weaponId}`);
+        if (!response.ok) throw new Error('Could not fetch weapon data');
+        
+        const weapon = await response.json();
+        
+        // Populate the modal form
+        document.getElementById('edit-serial_number').value = weapon.serial_number;
+        document.getElementById('edit-type').value = weapon.type;
+        document.getElementById('edit-model').value = weapon.model;
+        document.getElementById('edit-assigned_company_id').value = weapon.assigned_company_id;
+        document.getElementById('edit-status').value = weapon.status;
+        
+        
+        // Set the form's action URL
+        editWeaponForm.action = `/qm/update-weapon/${weaponId}`;
+        
+        editWeaponModal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error("Error fetching weapon:", error);
+        alert('Error: Could not load weapon data.');
+    }
+}
+
+// Opens and populates the "Edit Ammo" modal
+async function editAmmoItem(ammoId) {
+    try {
+        const response = await fetch(`/api/ammo/${ammoId}`);
+        if (!response.ok) throw new Error('Could not fetch ammo data');
+        
+        const ammo = await response.json();
+        
+        // Populate the modal form
+        document.getElementById('edit-ammo-type').value = ammo.ammo_type;
+        document.getElementById('edit-ammo-lot').value = ammo.lot_number;
+        document.getElementById('edit-ammo-quantity').value = ammo.quantity;
+        document.getElementById('edit-ammo-expiry').value = ammo.html_expiry_date;
+        document.getElementById('edit-ammo-low-stock').value = ammo.low_stock_threshold;
+        
+        // Set the form's action URL
+        editAmmoForm.action = `/qm/update-ammo/${ammoId}`;
+        
+        editAmmoModal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error("Error fetching ammo:", error);
+        alert('Error: Could not load ammo data.');
+    }
+}
+
+// Opens and populates the "Edit Fuel" modal
+async function editFuelItem(fuelId) {
+    try {
+        const response = await fetch(`/api/fuel/${fuelId}`);
+        if (!response.ok) throw new Error('Could not fetch fuel data');
+        
+        const fuel = await response.json();
+        
+        // Populate the modal form
+        document.getElementById('edit-fuel-type').value = fuel.fuel_type;
+        document.getElementById('edit-fuel-quantity').value = fuel.quantity_liters;
+        document.getElementById('edit-fuel-low-stock').value = fuel.low_stock_threshold;
+        
+        // Set the form's action URL
+        editFuelForm.action = `/qm/update-fuel/${fuelId}`;
+        
+        editFuelModal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error("Error fetching fuel:", error);
+        alert('Error: Could not load fuel data.');
+    }
+}
+
+
+// Opens and populates the "Edit Vehicle" modal
+async function editVehicle(vehicleId) {
+    try {
+        const response = await fetch(`/api/vehicle/${vehicleId}`);
+        if (!response.ok) throw new Error('Could not fetch vehicle data');
+        
+        const vehicle = await response.json();
+        
+        // Populate the modal form
+        document.getElementById('edit-vehicle-number').value = vehicle.vehicle_number;
+        document.getElementById('edit-vehicle-model').value = vehicle.model;
+        document.getElementById('edit-vehicle-type').value = vehicle.type;
+        document.getElementById('edit-driver-id').value = vehicle.driver_id || '';
+        document.getElementById('edit-vehicle-status').value = vehicle.status;
+        document.getElementById('edit-last-maint').value = vehicle.html_last_maint; 
+        document.getElementById('edit-next-maint').value = vehicle.html_next_maint;
+        
+        // Set the form's action URL
+        editVehicleForm.action = `/qm/update-vehicle/${vehicleId}`;
+        
+        editVehicleModal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error("Error fetching vehicle:", error);
+        alert('Error: Could not load vehicle data.');
+    }
+}
+
+
+    // Closes the "Edit Vehicle" modal
+    function closeVehicleModal() {
+        editVehicleModal.style.display = 'none';    
+    }
+
+    // Closes the "Edit Fuel" modal
+    function closeFuelModal() {
+        editFuelModal.style.display = 'none';
+    }
+
+    // Closes the "Edit Ammo" modal
+    function closeAmmoModal() {
+        editAmmoModal.style.display = 'none';
+    }
+
+    // Closes the "Edit Stock" modal
+    function closeModal() {
+        editStockModal.style.display = 'none';
+    }
+
+    // Closes the "Edit Weapon" modal
+    function closeWeaponModal() {
+        editWeaponModal.style.display = 'none';
+    }
+
+    // Closes the "Edit Ammo" modal
+    function closeAmmoModal() {
+        editAmmoModal.style.display = 'none';
+    }
+
+    // Rebuilds the company-level rations table
+    function updateCompanyStockTable(companyId) {
+        const companyStockTableBody = document.getElementById('company-stock-table-body');
+        companyStockTableBody.innerHTML = ''; // Clear the table
+
+        const filteredRations = allCompanyRations.filter(ration => ration.assigned_company_id == companyId);
+
+        if (filteredRations.length === 0) {
+            companyStockTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No stock found for this company.</td></tr>';
+            return;
+        }
+
+        filteredRations.forEach(ration => {
+            const row = `
+                <tr>
+                    <td>${ration.item_name}</td>
+                    <td>${ration.company_name}</td>
+                    <td>${ration.quantity_kg}</td>
+                    <td>${ration.expiry_date_f || 'N/A'}</td>
+                    <td>
+                        <a href="/qm/revert-stock/${ration.ration_id}" 
+                       style="color: #dc3545; text-decoration: none;" 
+                       onclick="return confirm('Are you sure?')">Revert</a>
+                    </td>
+                </tr>
+            `;
+            companyStockTableBody.innerHTML += row;
+        });
+    }
+
+    // --- 2. GLOBAL VARIABLES ---
+    // These must be defined *after* the HTML, so they are inside the 'load' event.
+    
+    let allCompanyRations;
+    let companyFilterSelect;
+    let editStockModal;
+    let editStockForm;
+    let editWeaponModal;
+    let editWeaponForm;
+    let editAmmoModal;
+    let editAmmoForm;
+    let editFuelModal;
+    let editFuelForm;
+    let editVehicleModal;
+    let editVehicleForm;
+
+    // --- 3. PAGE LOAD EVENT LISTENER ---
+    // This runs all the code that needs to find elements on the page.
+    window.addEventListener("load", () => {
+        
+        // Fade-in logic
+        document.body.style.opacity = 0;
+        document.body.style.transition = "opacity 1.2s ease-in-out";
+        document.body.style.opacity = 1;
+
+        // URL-cleaning logic
+        const url = new URL(window.location);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            const cleanPath = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanPath);
+        }
+
+        // Rations Filter logic
+        allCompanyRations = <%- JSON.stringify(companyRations) %>;
+        companyFilterSelect = document.getElementById('company_id');
+        
+        companyFilterSelect.addEventListener('change', (e) => {
+            updateCompanyStockTable(e.target.value);
+        });
+        
+        // Run the filter once on load
+        updateCompanyStockTable(companyFilterSelect.value);
+
+        // Stock Edit Modal logic
+        editStockModal = document.getElementById('edit-stock-modal');
+        editStockForm = document.getElementById('edit-stock-form');
+        
+        // Weapon Edit Modal logic
+        editWeaponModal = document.getElementById('edit-weapon-modal');
+        editWeaponForm = document.getElementById('edit-weapon-form');
+
+        // Ammo Edit Modal logic
+        editAmmoModal = document.getElementById('edit-ammo-modal');
+        editAmmoForm = document.getElementById('edit-ammo-form');
+
+        // Fuel Edit Modal logic
+        editFuelModal = document.getElementById('edit-fuel-modal');
+        editFuelForm = document.getElementById('edit-fuel-form');
+
+
+        // Vehicle Edit Modal logic
+        editVehicleModal = document.getElementById('edit-vehicle-modal');
+        editVehicleForm = document.getElementById('edit-vehicle-form');
+    
+        // main click handler to close EITHER modal
+        window.onclick = function(event) {
+        if (event.target == editStockModal) {
+            closeModal();
+        }
+        if (event.target == editWeaponModal) { 
+            closeWeaponModal();
+        }
+        if (event.target == editAmmoModal) {
+            closeAmmoModal();
+        }
+        if (event.target == editFuelModal) {
+            closeFuelModal();
+        }
+        if (event.target == editVehicleModal) {
+            closeVehicleModal();
+        }
+    }
+    });
+
+
+// --- QM REPORTS SCRIPT ---
+
+// 1. Get references to the report elements
+const generateReportBtn = document.getElementById('generate-report-btn');
+const downloadPdfBtn = document.getElementById('download-pdf-btn');
+const reportOutputContainer = document.getElementById('report-output-container');
+const reportTypeSelect = document.getElementById('report-type-select');
+
+// 2. Add listener to the "Generate" button
+if (generateReportBtn) {
+    generateReportBtn.addEventListener('click', () => {
+        fetchQMReport();
+    });
+}
+
+if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener('click', () => {
+        downloadReportAsPDF();
+    });
+}
+
+// 3. This function fetches the report data from the API
+async function fetchQMReport() {
+    const reportType = reportTypeSelect.value;
+    reportOutputContainer.innerHTML = '<p>Generating report...</p>';
+    
+    try {
+        const response = await fetch(`/api/qm-report?type=${reportType}`);
+        if (!response.ok) throw new Error('Could not fetch report data');
+        
+        const result = await response.json();
+        
+        // 4. Build the HTML for the report
+        buildReportTable(result.reportType, result.data);
+
+    } catch (error) {
+        console.error('Error generating report:', error);
+        reportOutputContainer.innerHTML = '<p style="color: #dc3545;">Error: Could not load report.</p>';
+    }
+}
+
+// 5. This helper function builds the correct table for each report
+function buildReportTable(type, data) {
+    let tableHTML = '';
+    
+    if (type === 'stock') {
+        tableHTML = `<h3>Full Battalion Stock Report</h3>`;
+        
+        // Weapons Table
+        tableHTML += '<h4>Weapons</h4><table><thead><tr><th>Serial No.</th><th>Type</th><th>Model</th><th>Status</th></tr></thead><tbody>';
+        data.weapons.forEach(item => {
+            tableHTML += `<tr><td>${item.serial_number}</td><td>${item.type}</td><td>${item.model}</td><td>${item.status}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+
+        // Ammunition Table
+        tableHTML += '<h4 style="margin-top: 20px;">Ammunition</h4><table><thead><tr><th>Type</th><th>Lot</th><th>Quantity</th><th>Expiry</th></tr></thead><tbody>';
+        data.ammo.forEach(item => {
+            tableHTML += `<tr><td>${item.ammo_type}</td><td>${item.lot_number}</td><td>${item.quantity}</td><td>${item.expiry_date_f || 'N/A'}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+
+        // Rations Table
+        tableHTML += '<h4 style="margin-top: 20px;">Battalion Rations</h4><table><thead><tr><th>Item</th><th>Lot</th><th>Quantity (kg)</th><th>Expiry</th></tr></thead><tbody>';
+        data.rations.forEach(item => {
+            tableHTML += `<tr><td>${item.item_name}</td><td>${item.lot_number}</td><td>${item.quantity_kg}</td><td>${item.expiry_date_f || 'N/A'}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+
+        // Fuel Table
+        tableHTML += '<h4 style="margin-top: 20px;">Fuel</h4><table><thead><tr><th>Type</th><th>Quantity (Liters)</th></tr></thead><tbody>';
+        data.fuel.forEach(item => {
+            tableHTML += `<tr><td>${item.fuel_type}</td><td>${item.quantity_liters}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+        
+    }
+    else if (type === 'distribution_log') {
+        tableHTML = `<h3>Ration Distribution Log</h3>`;
+        tableHTML += '<table><thead><tr><th>Date</th><th>Item</th><th>Lot</th><th>Company</th><th>Action</th><th>Qty</th></tr></thead><tbody>';
+        
+        if (data.length > 0) {
+            data.forEach(log => {
+                let color = log.transaction_type === 'Received_from_QM' ? '#28a745' : '#dc3545';
+                let actionName = log.transaction_type.replace(/_/g, ' ');
+                
+                tableHTML += `<tr>
+                                <td>${log.date_f}</td>
+                                <td>${log.item_name}</td>
+                                <td>${log.lot_number}</td>
+                                <td>${log.company_name}</td>
+                                <td>${actionName}</td>
+                                <td style="font-weight:bold; color:${color}">
+                                    ${log.quantity_change > 0 ? '+' : ''}${log.quantity_change}
+                                </td>
+                              </tr>`;
+            });
+        }else {
+            tableHTML += '<tr><td colspan="6" style="text-align: center;">No distribution records found.</td></tr>';
+        }
+        tableHTML += '</tbody></table>';
+        } else if (type === 'alerts') {
+        tableHTML = `<h3>Active Stock & Maintenance Alerts</h3>`;
+        tableHTML += '<table><thead><tr><th>Alert Type</th><th>Message</th><th>Date</th></tr></thead><tbody>';
+        if (data.length > 0) {
+            data.forEach(alert => {
+                tableHTML += `<tr style="color: ${alert.alert_type === 'Expiry' ? '#dc3545' : '#ffc107'};">
+                                <td>${alert.alert_type}</td>
+                                <td>${alert.message}</td>
+                                <td>${alert.alert_date_f}</td>
+                              </tr>`;
+            });
+        } else {
+            tableHTML += '<tr><td colspan="3" style="text-align: center;">No active alerts.</td></tr>';
+        }
+        tableHTML += '</tbody></table>';
+    }
+    
+    reportOutputContainer.innerHTML = tableHTML;
+}
+
+// 6. This is your PDF Download function, it will print the generated report
+if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener('click', () => {
+        const element = document.getElementById('report-output-container');
+        if (!element.querySelector('table')) {
+            alert('Please generate a report first before downloading.');
+            return;
+        }
+        
+        const reportName = reportTypeSelect.options[reportTypeSelect.selectedIndex].text.replace(/\s+/g, '_');
+        const filename = `${reportName}.pdf`;
+
+        const options = {
+            margin:       [0.5, 0.5, 0.5, 0.5],
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Add the 'pdf-export' class to force black text
+        element.classList.add('pdf-export');
+        
+        html2pdf().from(element).set(options).save().then(() => {
+            // Remove the class after the PDF is saved
+            element.classList.remove('pdf-export');
+        }).catch((err) => {
+            console.error('PDF generation failed:', err);
+            element.classList.remove('pdf-export');
+        });
+    });
+}
+
+
+
+
+
+</script>
+
+</body>
+</html>

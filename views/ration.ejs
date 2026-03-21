@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Ration Incharge Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; transition: all 0.3s ease; }
+  body { background-color: #000; color: #fff; opacity: 0; animation: fadeIn 1s ease forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Header */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; background: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7); border-radius: 0 0 20px 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: bold; color: #fff; }
+  header .nav-links a {
+    margin-left: 20px; padding: 8px 15px; border-radius: 8px;
+    text-decoration: none; color: #fff; font-weight: bold;
+  }
+  /* New Theme Color: Ration Brown */
+  header .nav-links a:hover { background: rgba(200,121,65,0.2); color: #c87941; }
+
+  /* Layout */
+  .dashboard-container { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(20,20,20,0.95); backdrop-filter: blur(12px);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 20px; display: flex; flex-direction: column;
+  }
+  /* New Theme Color: Ration Brown */
+  .sidebar h2 { margin-bottom: 20px; font-weight: bold; text-align: center; color: #c87941; }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li {
+    padding: 12px 10px; margin-bottom: 10px; cursor: pointer;
+    font-weight: bold; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff;
+  }
+  /* New Theme Color: Ration Brown */
+  .sidebar ul li:hover { background: rgba(200,121,65,0.2); color: #c87941; }
+  .sidebar ul li.active { background: rgba(200,121,65,0.3); color: #c87941; }
+
+  /* Main content */
+  .main-content { padding: 30px; display: flex; flex-direction: column; gap: 40px; }
+
+  .module-section {
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+    border-radius: 25px; padding: 35px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none; transform: translateY(20px); opacity: 0;
+    animation: slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform: translateY(0); opacity: 1; } }
+  /* New Theme Color: Ration Brown */
+  .module-section h2 { margin-bottom: 25px; font-size: 2rem; color: #c87941; }
+
+  /* Cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.1);
+    border-radius: 15px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  /* New Theme Color: Ration Brown */
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(200,121,65,0.5); }
+
+  /* Button Group */
+  .button-group { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .module-section button {
+    padding: 14px 25px; border-radius: 12px; border: 2px solid #fff;
+    background: transparent; color: #fff; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(200,121,65,0.4); transition: all 0.3s ease;
+  }
+  /* New Theme Color: Ration Brown */
+  .module-section button:hover {
+    background: rgba(200,121,65,0.3); border-color: #c87941; transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(200,121,65,0.6);
+  }
+
+  /* Table */
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 20px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 15px;
+  }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background: rgba(255,255,255,0.1); color: #fff; }
+  /* New Theme Color: Ration Brown */
+  tr:hover { background: rgba(200,121,65,0.2); color: #c87941; }
+
+  /* Form Elements */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #c87941;
+  }
+  .form-group input, .form-group select {
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+  }
+  .form-group option {
+    background: #222; color: #fff;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: #c87941;
+  }
+
+  /* ADD THIS: PDF Export Styles */
+        .pdf-export, .pdf-export * {
+            color: black !important;
+            background-color: white !important;
+        }
+
+
+  footer {
+    background: rgba(20,20,20,0.9); backdrop-filter: blur(12px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5); padding: 30px 40px;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+  }
+  /* New Theme Color: Ration Brown */
+  footer div h3 { margin-bottom: 10px; color: #c87941; }
+  footer div ul { list-style: none; }
+  footer div ul li { margin-bottom: 5px; color: #fff; }
+  footer div ul li:hover { color: #c87941; cursor: pointer; }
+
+  @media(max-width: 900px) { 
+    .dashboard-container { grid-template-columns: 1fr; } 
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+
+  /* Add this utility for red/green status text if you want */
+  .text-danger { color: #dc3545; font-weight: bold; }
+  .text-warning { color: #ffc107; font-weight: bold; }
+
+  .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+  .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> - Ration Dashboard</h1>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a onclick="showSection('reports', this)">RationReports</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Ration Menu</h2>
+    <ul>
+      <li onclick="showSection('overview', this)" class="active">Ration Overview</li>
+      <li onclick="showSection('issue', this)">Issue Rations</li>
+      <li onclick="showSection('ledger', this)">Ration Ledger</li>
+      <li onclick="showSection('stock', this)">Current Stock</li>
+      <li onclick="showSection('alerts', this)">Alerts</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    
+    <% if (error) { %><div class="error-alert"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert"><%= success %></div><% } %>
+
+
+    <section id="overview" class="module-section" style="display:block;">
+      <h2>Ration Overview (<%= companyName %>)</h2>
+      <div class="card-container">
+        <div class="card"><h3>Total Stock</h3><p><%= stats.totalStock %> Kg</p></div>
+        <div class="card"><h3>Low Stock Items</h3><p><%= stats.lowStockCount %></p></div>
+        <div class="card"><h3>Expiring Items</h3><p><%= stats.expiringCount %></p></div>
+      </div>
+    </section>
+
+    
+    <section id="issue" class="module-section">
+      <h2>Issue Rations (Consumption)</h2>
+      <p>Issue rations for daily consumption (Cookhouse).</p>
+      <form action="/ration/consume" method="POST">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="ration_id">Select Item</label>
+            <select id="ration_id" name="ration_id" required>
+                <% rations.forEach(r => { %>
+                    <option value="<%= r.ration_id %>"><%= r.item_name %> (Avail: <%= r.quantity_kg %> kg)</option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="transaction_type">Transaction Type</label>
+            <select id="transaction_type" name="transaction_type" required>
+                <option value="Consumed_Daily">Daily Consumption (Cookhouse)</option>
+                <option value="Spoilage/Waste">Spoilage / Waste</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity (Kg)</label>
+            <input type="number" step="0.01" id="quantity" name="quantity" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="remarks">Remarks (Optional)</label>
+            <input type="text" id="remarks" name="remarks" placeholder="e.g., Breakfast for 120 men">
+          </div>
+        </div>
+        <div class="button-group">
+          <button type="submit">Log Consumption</button>
+        </div>
+      </form>
+    </section>
+
+
+    <section id="ledger" class="module-section">
+    <h2>Ration Ledger</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Quantity</th><th>Remarks</th></tr></thead>
+        <tbody>
+          <% if (rationLogs && rationLogs.length > 0) { %>
+            <% rationLogs.forEach(log => { %>
+            <tr>
+                <td><%= new Date(log.transaction_date).toLocaleDateString('en-GB') %></td>
+                <td><%= log.item_name %></td>
+                <td><%= log.transaction_type.replace(/_/g, ' ') %></td>
+                <td style="color: <%= log.quantity_change < 0 ? '#dc3545' : '#28a745' %>; font-weight: bold;">
+                    <%= log.quantity_change > 0 ? '+' : '' %><%= log.quantity_change %> Kg
+                </td>
+                <td><%= log.remarks %></td>
+            </tr>
+            <% }) %>
+          <% } else { %>
+              <tr><td colspan="5" style="text-align: center;">No transaction history found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="stock" class="module-section">
+      <h2>Current Ration Stock</h2>
+      <table>
+        <thead><tr><th>Item</th><th>Quantity (Kg)</th><th>Expiry Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <% if (rations.length > 0) { %>
+            <% rations.forEach(r => { %>
+              <tr>
+                <td><%= r.item_name %></td>
+                <td><%= r.quantity_kg %></td>
+                <td><%= r.expiry_date_f || 'N/A' %></td>
+                
+                <% if (r.quantity_kg < r.low_stock_threshold) { %>
+                    <td class="text-danger">Low Stock</td>
+                <% } else { %>
+                    <td style="color: #28a745;">OK</td>
+                <% } %>
+                <td>
+                <button onclick="openReturnModal('<%= r.ration_id %>', '<%= r.item_name %>', '<%= r.quantity_kg %>')" 
+                        style="font-size: 14px; padding: 5px 10px; border-color: #dc3545; color: #fff;">
+                    Return
+                </button>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="5" style="text-align: center;">No rations in stock.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+
+    <div id="return-modal" class="modal-overlay" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); align-items: center; justify-content: center;">
+      <div class="modal-content" style="background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; width: 400px; position: relative;">
+        <span class="modal-close" onclick="closeReturnModal()" style="position: absolute; top: 15px; right: 20px; color: #aaa; cursor: pointer; font-size: 24px;">&times;</span>
+        <h2 style="color: #c87941; margin-bottom: 20px;">Return Stock to QM</h2>
+        
+        <form action="/ration/revert" method="POST">
+          <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+            <input type="hidden" id="return-ration-id" name="ration_id">
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Item:</label>
+                <input type="text" id="return-item-name" readonly style="background: #222; color: #aaa; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #555;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Quantity to Return (Kg):</label>
+                <input type="number" step="0.01" name="quantity" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #555; background: #333; color: white;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Reason/Remarks:</label>
+                <input type="text" name="remarks" placeholder="e.g., Excess stock returned" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #555; background: #333; color: white;">
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 12px; background: rgba(200,121,65,0.3); border: 2px solid #c87941; color: white; font-weight: bold; border-radius: 10px; cursor: pointer;">Confirm Return</button>
+        </form>
+      </div>
+    </div>
+
+
+    <section id="alerts" class="module-section">
+      <h2>Stock Alerts</h2>
+      <table>
+        <thead><tr><th>Alert</th><th>Message</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>
+          <% if (alerts.length > 0) { %>
+            <% alerts.forEach(alert => { %>
+              <tr style="color: <%= alert.alert_type === 'Expiry' ? '#dc3545' : '#ffc107' %>;">
+                <td><%= alert.alert_type %></td>
+                <td><%= alert.message %></td>
+                <td><%= alert.alert_date_f %></td>
+                <td><a href="#" style="color: inherit;">Dismiss</a></td> </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align: center;">No active alerts.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+
+
+    <section id="reports" class="module-section">
+    <h2>Ration Reports</h2>
+    
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="report-type-select" style="font-weight: bold; margin-bottom: 5px; display: block;">Select Report Type:</label>
+        <select id="report-type-select" style="padding: 12px; border-radius: 10px; width: 100%; background: #333; color: white; border: 1px solid #555;">
+            <option value="stock">Current Stock Report</option>
+            <option value="ledger">Transaction Ledger</option>
+        </select>
+      </div>
+    
+      <div class="button-group">
+        <button id="generate-report-btn">Generate Report</button>
+        <button id="download-pdf-btn">Download as PDF</button>
+      </div>
+
+      <div id="report-output-container" style="margin-top: 30px;"></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Ration Stores</h3>
+    <ul>
+      <li>Stock Ledger</li>
+      <li>Expiry</li>
+      <li>Alerts</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>Battalion Reports</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+    // Store the current company ID (passed from app.js) for use in APIs
+    // We need to make sure 'companyId' is passed in the res.render for this to work
+    const currentCompanyId = "<%= (typeof companyId !== 'undefined') ? companyId : user.company_id %>";
+
+    // 1. Navigation Logic
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.module-section').forEach(sec => sec.style.display='none');
+        document.getElementById(sectionId).style.display='block';
+        document.querySelectorAll('.sidebar ul li').forEach(btn => btn.classList.remove('active'));
+        if(element) element.classList.add('active');
+    }
+
+    // 2. Modal Logic (Return Stock)
+    const returnModal = document.getElementById('return-modal');
+    function openReturnModal(rationId, itemName, currentQty) {
+        document.getElementById('return-ration-id').value = rationId;
+        document.getElementById('return-item-name').value = `${itemName} (Max: ${currentQty}kg)`;
+        returnModal.style.display = 'flex'; // Flex to center
+    }
+    function closeReturnModal() {
+        returnModal.style.display = 'none';
+    }
+
+    // 3. Report Logic (NEW)
+    const generateBtn = document.getElementById('generate-report-btn');
+    const downloadBtn = document.getElementById('download-pdf-btn');
+    const reportOutput = document.getElementById('report-output-container');
+    const reportSelect = document.getElementById('report-type-select');
+
+    async function fetchRationReport() {
+        const type = reportSelect.value;
+        reportOutput.innerHTML = '<p>Generating...</p>';
+        
+        try {
+            const response = await fetch(`/api/ration-report?type=${type}&company_id=${currentCompanyId}`);
+            const result = await response.json();
+            
+            let html = `<h3>${type === 'stock' ? 'Current Stock Report' : 'Transaction Ledger'}</h3>`;
+            html += '<table><thead><tr>';
+            
+            if (type === 'stock') {
+                html += '<th>Item</th><th>Quantity (Kg)</th><th>Expiry</th><th>Status</th></tr></thead><tbody>';
+                result.data.forEach(row => {
+                    let status = row.quantity_kg < row.low_stock_threshold ? '<span style="color:#dc3545">Low</span>' : '<span style="color:#28a745">OK</span>';
+                    html += `<tr><td>${row.item_name}</td><td>${row.quantity_kg}</td><td>${row.expiry_date_f}</td><td>${status}</td></tr>`;
+                });
+            } else {
+                html += '<th>Date</th><th>Item</th><th>Type</th><th>Qty Change</th><th>User</th></tr></thead><tbody>';
+                result.data.forEach(row => {
+                    html += `<tr>
+                        <td>${row.date_f}</td>
+                        <td>${row.item_name}</td>
+                        <td>${row.transaction_type}</td>
+                        <td style="color:${row.quantity_change < 0 ? '#dc3545' : '#28a745'}">${row.quantity_change}</td>
+                        <td>${row.soldier_name || 'N/A'}</td>
+                    </tr>`;
+                });
+            }
+            html += '</tbody></table>';
+            reportOutput.innerHTML = html;
+        } catch (e) {
+            console.error(e);
+            reportOutput.innerHTML = '<p style="color:red">Error loading report</p>';
+        }
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('report-output-container');
+        if (!element.querySelector('table')) return alert('Generate a report first');
+        
+        element.classList.add('pdf-export');
+        html2pdf().from(element).save('Ration_Report.pdf').then(() => {
+            element.classList.remove('pdf-export');
+        });
+    }
+
+    // 4. Page Load Init
+    window.addEventListener("load", () => {
+        document.getElementById('overview').style.display = 'block';
+        document.body.style.opacity = 1;
+        document.body.style.transition = "opacity 1.2s ease-in-out";
+
+        // URL Clean
+        const url = new URL(window.location);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Event Listeners
+        if(generateBtn) generateBtn.addEventListener('click', fetchRationReport);
+        if(downloadBtn) downloadBtn.addEventListener('click', downloadPDF);
+        
+        window.onclick = function(event) {
+            if (event.target == returnModal) closeReturnModal();
+        }
+    });
+</script>
+
+</body>
+</html>

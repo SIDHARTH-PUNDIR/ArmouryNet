@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Weapon Incharge Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; transition: all 0.3s ease; }
+  body { background-color: #000; color: #fff; opacity: 0; animation: fadeIn 1s ease forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Header */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; background: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7); border-radius: 0 0 20px 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: bold; color: #fff; }
+  header .nav-links a {
+    margin-left: 20px; padding: 8px 15px; border-radius: 8px;
+    text-decoration: none; color: #fff; font-weight: bold;
+  }
+  /* Theme Color: Gunmetal Blue */
+  header .nav-links a:hover { background: rgba(74,105,129,0.2); color: #4a6981; }
+
+  /* Layout */
+  .dashboard-container { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(20,20,20,0.95); backdrop-filter: blur(12px);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 20px; display: flex; flex-direction: column;
+  }
+  /* Theme Color: Gunmetal Blue */
+  .sidebar h2 { margin-bottom: 20px; font-weight: bold; text-align: center; color: #4a6981; }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li {
+    padding: 12px 10px; margin-bottom: 10px; cursor: pointer;
+    font-weight: bold; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff;
+  }
+  /* Theme Color: Gunmetal Blue */
+  .sidebar ul li:hover { background: rgba(74,105,129,0.2); color: #4a6981; }
+  .sidebar ul li.active { background: rgba(74,105,129,0.3); color: #4a6981; }
+
+  /* Main content */
+
+  .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+  .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+
+
+  .main-content { padding: 30px; display: flex; flex-direction: column; gap: 40px; }
+
+  .module-section {
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+    border-radius: 25px; padding: 35px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none; transform: translateY(20px); opacity: 0;
+    animation: slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform: translateY(0); opacity: 1; } }
+  /* Theme Color: Gunmetal Blue */
+  .module-section h2 { margin-bottom: 25px; font-size: 2rem; color: #4a6981; }
+
+  /* Cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.1);
+    border-radius: 15px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  /* Theme Color: Gunmetal Blue */
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(74,105,129,0.5); }
+
+  /* Button Group */
+  .button-group { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .module-section button, .modal-content button {
+    padding: 14px 25px; border-radius: 12px; border: 2px solid #fff;
+    background: transparent; color: #fff; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(74,105,129,0.4); transition: all 0.3s ease;
+  }
+  /* Theme Color: Gunmetal Blue */
+  .module-section button:hover , .modal-content button:hover {
+    background: rgba(74,105,129,0.3); border-color: #4a6981; transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(74,105,129,0.6);
+  }
+
+
+  /* --- Styles for Modal --- */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    /* Center the content */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-radius: 25px;
+    padding: 35px;
+    width: 60%;
+    max-width: 700px;
+    position: relative;
+    animation: slideFade 0.3s forwards;
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
+
+#edit-weapon-modal .form-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+  /* Table */
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 20px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 15px;
+  }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background: rgba(255,255,255,0.1); color: #fff; }
+  /* Theme Color: Gunmetal Blue */
+  tr:hover { background: rgba(74,105,129,0.2); color: #4a6981; }
+
+  /* Form Elements */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #4a6981;
+  }
+  .form-group input, .form-group select {
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+  }
+  .form-group select option {
+  background-color: white;
+  color: black;
+}
+  .form-group input:focus {
+    outline: none;
+    border-color: #4a6981;
+  }
+
+
+
+  /* --- PDF Export Specific Styles --- */
+/* Forces text to be black when exporting to PDF */
+.pdf-export,
+.pdf-export h1,
+.pdf-export h2,
+.pdf-export h3,
+.pdf-export p,
+.pdf-export td,
+.pdf-export th,
+.pdf-export a {
+    color: black !important;
+}
+
+/* Ensure background is white */
+.pdf-export table,
+.pdf-export tr,
+.pdf-export td,
+.pdf-export th {
+    background-color: white !important;
+}
+
+
+
+  footer {
+    background: rgba(20,20,20,0.9); backdrop-filter: blur(12px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5); padding: 30px 40px;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+  }
+  /* Theme Color: Gunmetal Blue */
+  footer div h3 { margin-bottom: 10px; color: #4a6981; }
+  footer div ul { list-style: none; }
+  footer div ul li { margin-bottom: 5px; color: #fff; }
+  footer div ul li:hover { color: #4a6981; cursor: pointer; }
+
+  @media(max-width: 900px) { 
+    .dashboard-container { grid-template-columns: 1fr; } 
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> - Kote Dashboard</h1>
+  <div class="nav-links">
+    <a href="home.html">Home</a>
+    <a onclick="showSection('reports', this)">Company Reports</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+      <li onclick="showSection('overview', this)" class="active">Kote Overview</li>
+      <li onclick="showSection('issue', this)">Issue / Return Weapon</li>
+      <li onclick="showSection('assign', this)">Assign Weapon</li>
+      <li onclick="showSection('ledger', this)">Weapon Ledger</li>
+      <li onclick="showSection('ammo-kote', this)">Ammunition</li>
+      <li onclick="showSection('alerts', this)">Maintenance Alerts</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+
+
+    <% if (error) { %><div class="error-alert" style="background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert" style="background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><%= success %></div><% } %>
+    
+    <section id="overview" class="module-section" style="display:block;">
+      <h2>Kote Overview (<%= companyName %>)</h2>
+      <div class="card-container">
+        <div class="card"><h3>Total Weapons</h3><p><%= weapons.length %></p></div>
+        <div class="card"><h3>Weapons Issued</h3><p><%= weapons.filter(w => w.status === 'Issued').length %></p></div>
+        <div class="card"><h3>In-Store</h3><p><%= weapons.filter(w => w.status === 'In-Store').length %></p></div>
+        <div class="card"><h3>Maintenance Due</h3><p><%= alerts.length %></p></div>
+      </div>
+      
+      <h3 style="margin-top: 20px;">Full Company Inventory</h3>
+      <div class="form-group" style="margin-top: 20px; margin-bottom: 10px;">
+        <label for="kote-overview-search" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Inventory:</label>
+        <input type="text" id="kote-overview-search" placeholder="Search by Serial No, Type, or Assigned Soldier..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+    <table>
+      <thead>
+        <tr>
+            <th>Weapon S/N</th>
+            <th>Type</th>
+            <th>Model</th>
+            <th>Assigned To</th>
+            <th>Status</th>
+            <th>Actions</th> </tr>
+      </thead>
+      <tbody id="kote-overview-table-body">
+        <% weapons.forEach(w => { %>
+        <tr>
+            <td><%= w.serial_number %></td>
+            <td><%= w.type %></td>
+            <td><%= w.model %></td>
+            <td><%= w.allocated_to || 'N/A' %></td>
+            <td style="color: <%= w.status === 'In-Store' ? '#4a6981' : (w.status === 'Issued' ? '#28a745' : '#dc3545') %>">
+                <%= w.status %>
+            </td>
+            <td>
+                <button onclick="editWeaponMaintenance(<%= w.weapon_id %>)" style="font-size: 14px; padding: 5px 10px;">
+                    Update
+                </button>
+            </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    </section>
+
+
+    <!--Weapon Maintenance Modal -->
+    <div id="edit-maint-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="modal-close" onclick="closeMaintModal()">&times;</span>
+        <h2>Update Maintenance</h2>
+        <p style="margin-bottom: 20px;">Updating: <strong id="maint-weapon-name"></strong></p>
+        
+        <form id="edit-maint-form" method="POST">
+            <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label for="edit-last-maint">Last Maintenance</label>
+                    <input type="date" id="edit-last-maint" name="last_maintenance">
+                </div>
+                <div class="form-group">
+                    <label for="edit-next-maint">Next Maintenance</label>
+                    <input type="date" id="edit-next-maint" name="next_maintenance">
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                  <label for="edit-weapon-status">Set Weapon Status</label>
+                  <select id="edit-weapon-status" name="status" required>
+                    <option value="In-Store">In-Store</option>
+                    <option value="Issued">Issued</option>
+                    <option value="In-Repair">In-Repair</option>
+                  </select>
+                </div>
+            </div>
+            <button type="submit" style="margin-top: 20px;">Update</button>
+        </form>
+    </div>
+</div>
+
+
+
+    <section id="issue" class="module-section">
+      <h2>Issue / Return Weapon</h2>
+      <p>Physically allocate a weapon to a soldier or return it to the kote. This calls `sp_AllocateWeaponToSoldier`.</p>
+      <form action="/kote/allocate" method="POST" style="margin-top: 20px;">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="weapon-id-issue">Select Weapon (In-Store)</label>
+              <select id="weapon-id-issue" name="weapon_id" required>
+                <% weapons.filter(w => w.status === 'In-Store').forEach(w => { %>
+                    <option value="<%= w.weapon_id %>"><%= w.serial_number %> (<%= w.type %>)</option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="soldier-id-issue">Select Soldier</label>
+              <select id="soldier-id-issue" name="soldier_id" required>
+                <% soldiers.forEach(s => { %>
+                    <option value="<%= s.soldier_id %>"><%= s.rank %> <%= s.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="submit">Issue Weapon</button>
+            </div>
+      </form>
+
+    <h3 style="color: #4a6981; margin-top: 30px; margin-bottom: 20px;">Return Weapon</h3>
+    <p>Return a physically issued weapon to the kote.</p>
+    <form action="/kote/return" method="POST" style="margin-top: 20px;">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="weapon-id-return">Select Weapon (Currently Issued)</label>
+            <select id="weapon-id-return" name="weapon_id" required>
+              <% weapons.filter(w => w.status === 'Issued').forEach(w => { %>
+                  <option value="<%= w.weapon_id %>">
+                      <%= w.serial_number %> (Issued to: <%= w.allocated_to || 'Unknown' %>)
+                  </option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="button-group">
+          <button type="submit" style="border-color: #d32f2f;">Return Weapon</button>
+        </div>
+    </form>
+    </section>
+
+
+    <section id="assign" class="module-section">
+    <h2>Formally Assign Weapon</h2>
+    <p>Create the permanent link between a soldier and a weapon.</p>
+    
+    <form action="/kote/assign" method="POST" style="margin-top: 20px;">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="weapon-id-assign">Select Weapon (Unassigned)</label>
+                <select id="weapon-id-assign" name="weapon_id" required>
+                    <% 
+                    const assignedWeaponIds = assignments.map(a => a.weapon_id);
+                    weapons.filter(w => !assignedWeaponIds.includes(w.weapon_id)).forEach(w => { 
+                    %>
+                        <option value="<%= w.weapon_id %>"><%= w.serial_number %> (<%= w.type %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="soldier-id-assign">Select Soldier</label>
+                <select id="soldier-id-assign" name="soldier_id" required>
+                    <% soldiers.forEach(s => { %>
+                        <option value="<%= s.soldier_id %>"><%= s.rank %> <%= s.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="submit">Assign Weapon to Soldier</button>
+        </div>
+    </form>
+
+    <hr style="border-color: #4a6981; margin: 30px 0;">
+
+    <h3 style="color: #4a6981;">Currently Assigned Weapons</h3>
+    <p>This table shows the formal assignments for your company.</p>
+    <div class="form-group" style="margin-top: 20px; margin-bottom: 10px;">
+      <label for="assignment-search-input" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Assignments:</label>
+      <input type="text" id="assignment-search-input" placeholder="Search by Serial No, Soldier, or Rank..." 
+           style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Weapon S/N</th>
+                <th>Soldier Name</th>
+                <th>Rank</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="assignments-table-body">
+            <% if (assignments.length > 0) { %>
+                <% assignments.forEach(a => { %>
+                    <tr>
+                        <td><%= a.serial_number %></td>
+                        <td><%= a.name %></td>
+                        <td><%= a.rank %></td>
+                        <td>
+                            <a href="/kote/deassign/<%= a.weapon_id %>" 
+                               style="color: #d32f2f; text-decoration: none;"
+                               onclick="return confirm('Are you sure you want to DE-ASSIGN this weapon? This can only be done if the weapon is In-Store.')">
+                               De-assign
+                            </a>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="4" style="text-align: center;">No weapons are formally assigned.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
+
+
+
+
+    <section id="ledger" class="module-section">
+      <h2>Weapon Ledger</h2>
+     <p>Shows the most recent issue/return logs for your company.</p>
+     <div class="form-group" style="margin-bottom: 10px;">
+        <label for="ledger-search-input" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Ledger:</label>
+        <input type="text" id="ledger-search-input" placeholder="Search by Serial No. or Soldier..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+    </div>
+      <table>
+        <thead><tr><th>Weapon S/N</th><th>Soldier</th><th>Date Issued</th><th>Date Returned</th></tr></thead>
+        <tbody id="weapon-ledger-table-body">
+          <% if (ledger.length > 0) { %>
+            <% ledger.forEach(log => { %>
+            <tr>
+                <td><%= log.serial_number %></td>
+                <td><%= log.name %></td>
+                <td><%= log.date_issued_f %></td>
+                <td><%= log.date_returned_f || '---' %></td>
+            </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align: center;">No weapon logs found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+
+    <section id="ammo-kote" class="module-section">
+    <h2>Company Ammunition</h2>
+    
+    <h3 style="color: #4a6981;margin-bottom: 20px;">Issue Ammunition (from Central Store)</h3>
+    <p style="margin-bottom: 20px;">Issue ammo from the battalion's central stock to a soldier.</p>
+    <form action="/kote/issue-ammo" method="POST">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-group">
+            <label for="ammo_id">Select Ammo Batch (Battalion Stock)</label>
+            <select id="ammo_id" name="ammo_id" required>
+                <% ammunition.forEach(ammo => { %>
+                    <option value="<%= ammo.ammo_id %>">
+                        <%= ammo.ammo_type %> (Lot: <%= ammo.lot_number %>) - Stock: <%= ammo.quantity %>
+                    </option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="soldier-id-ammo">Select Soldier (Your Company)</label>
+            <select id="soldier-id-ammo" name="soldier_id" required>
+                <% soldiers.forEach(s => { %>
+                    <option value="<%= s.soldier_id %>"><%= s.rank %> <%= s.name %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quantity-issue">Quantity to Issue</label>
+            <input type="number" id="quantity-issue" name="quantity" required>
+        </div>
+
+        <div class="form-group">
+            <label for="transaction_type">Purpose of Issue</label>
+            <select id="transaction_type" name="transaction_type" required>
+                <option value="Issued_to_Soldier">Issued to Soldier (General)</option>
+                <option value="Issued_Training">Issued for Training</option>
+                <option value="Issued_Operational">Issued for Operational Duty</option>
+            </select>
+        </div>
+    </div>
+    <div class="button-group">
+        <button type="submit">Issue Ammunition</button>
+    </div>
+</form>
+
+    <hr style="border-color: #4a6981; margin: 30px 0;">
+
+    <h3 style="color: #4a6981;margin-bottom: 20px;">Return Ammunition (to Central Store)</h3>
+    <p style="margin-bottom: 20px;">Return unused ammo from a soldier to the battalion's stock.</p>
+    <form action="/kote/return-ammo" method="POST">
+        <input type="hidden" name="redirect_company_id" value="<%= viewedCompanyId %>">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+            <div class="form-group">
+                <label for="soldier-id-return">Select Soldier (Your Company)</label>
+                <select id="soldier-id-return" name="soldier_id" required>
+                    <% soldiers.forEach(s => { %>
+                        <option value="<%= s.soldier_id %>"><%= s.rank %> <%= s.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ammo_type_return">Ammo Type</label>
+                <input type="text" id="ammo_type_return" name="ammo_type" placeholder="e.g., 5.56mm Ball" required>
+            </div>
+            <div class="form-group">
+                <label for="lot_number_return">Lot Number</label>
+                <input type="text" id="lot_number_return" name="lot_number" placeholder="e.g., LOT-101/24" required>
+            </div>
+            <div class="form-group">
+                <label for="quantity-return">Quantity to Return</label>
+                <input type="number" id="quantity-return" name="quantity" required>
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="submit" style="border-color: #d32f2f;">Return Ammunition</button>
+        </div>
+    </form>
+
+    <hr style="border-color: #4a6981; margin: 30px 0;">
+
+    <h3 style="color: #4a6981;">Your Company's Ammo Log</h3>
+    <div class="form-group" style="margin-top: 20px; margin-bottom: 10px;">
+        <label for="ammo-log-search-input" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Log:</label>
+        <input type="text" id="ammo-log-search-input" placeholder="Search by Soldier, Ammo Type, or Lot..." 
+           style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+    </div>
+    <table >
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Soldier</th>
+                <th>Ammo Type</th>
+                <th>Lot Number</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody id="ammo-log-table-body">
+            <% ammoLog.forEach(log => { %>
+                <tr style="color: <%= log.quantity_change > 0 ? '#28a745' : '#fff' %>">
+                    <td><%= log.date_f %></td>
+                    <td><%= log.soldier_name %></td>
+                    <td><%= log.ammo_type %></td>
+                    <td><%= log.lot_number %></td>
+                    <td><%= log.quantity_change > 0 ? '+' : '' %><%= log.quantity_change %></td>
+                </tr>
+            <% }) %>
+            <% if (ammoLog.length === 0) { %>
+                <tr><td colspan="5" style="text-align: center;">No ammo logs found for your company.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
+
+
+
+
+
+      <section id="reports" class="module-section">
+        <h2>Company Reports</h2>
+        <p style="margin-top: 20px; margin-bottom: 20px;">Generate and download reports for your company's kote.</p>
+    
+        <div class="filter-bar" style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        
+          <div class="form-group" style="flex: 1; min-width: 300px;">
+            <label for="kote-report-type-select" style="font-weight: bold; margin-bottom: 5px; display: block;">Select Report Type:</label>
+            <select id="kote-report-type-select" style="padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; width: 100%;">
+                <option value="inventory">Kote Inventory (Current Status)</option>
+                <option value="ledger">Weapon Issue Ledger (Full History)</option>
+            </select>
+          </div>
+        
+          <button id="generate-kote-report-btn" style="align-self: flex-end;">Generate Report</button>
+          <button id="download-kote-pdf-btn" style="align-self: flex-end;">Download as PDF</button>
+        </div>
+    
+        <div id="report-output-container" style="margin-top: 20px;">
+        </div>
+      </section>
+
+
+
+
+
+    <section id="alerts" class="module-section">
+      <h2>Maintenance Alerts</h2>
+      <p>The following weapons assigned to your company are due for maintenance.</p>
+      <table>
+        <thead><tr><th>Weapon S/N</th><th>Message</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>
+          <% if (alerts.length > 0) { %>
+            <% alerts.forEach(alert => { %>
+              <tr style="color: #ffc107;">
+                <td><%= alert.serial_number %></td>
+                <td><%= alert.message %></td>
+                <td><%= alert.alert_date_formatted %></td>
+                <td><a href="/alert/resolve/<%= alert.alert_id %>" style="color: #4a6981; text-decoration: none;">Dismiss</a></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align: center;">No active maintenance alerts.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Company Kote</h3>
+    <ul>
+      <li>Issue / Return</li>
+      <li>Ledger</li>
+      <li>Alerts</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>Battalion Reports</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+    // ================================================================================= --
+    // --- 1. ALL FUNCTION DEFINITIONS ---
+    // ================================================================================= --
+
+    // Handles switching between sections/tabs
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.module-section').forEach(sec => { sec.style.display = 'none'; });
+        document.getElementById(sectionId).style.display = 'block';
+        document.querySelectorAll('.sidebar ul li').forEach(btn => { btn.classList.remove('active'); });
+        if (element) { element.classList.add('active'); }
+    }
+
+    // Store the current company ID (passed from app.js) for use in APIs
+    // We need to make sure 'companyId' is passed in the res.render for this to work
+    const currentCompanyId = "<%= (typeof companyId !== 'undefined') ? companyId : user.company_id %>";
+
+    // --- Maintenance Modal Functions ---
+    async function editWeaponMaintenance(weaponId) {
+        try {
+            const response = await fetch(`/api/weapon/${weaponId}`); 
+            if (!response.ok) throw new Error('Could not fetch weapon data');
+            const weapon = await response.json();
+            
+            document.getElementById('maint-weapon-name').innerText = `${weapon.serial_number} (${weapon.model})`;
+            document.getElementById('edit-last-maint').value = weapon.html_last_maint; 
+            document.getElementById('edit-next-maint').value = weapon.html_next_maint;
+            document.getElementById('edit-weapon-status').value = weapon.status;
+            
+            editMaintForm.action = `/kote/update-maintenance/${weaponId}`;
+            editMaintModal.style.display = 'flex';
+        } catch (error) {
+            console.error("Error fetching weapon for maintenance:", error);
+            alert('Error: Could not load weapon data.');
+        }
+    }
+    function closeMaintModal() {
+        editMaintModal.style.display = 'none';
+    }
+
+    // --- Kote Search Functions ---
+    async function fetchCompanyWeapons(searchTerm) {
+        try {
+            const response = await fetch(`/api/cc-search-weapons?term=${searchTerm}&company_id=${currentCompanyId}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const weapons = await response.json();
+            updateCompanyWeaponTable(weapons);
+        } catch (error) {
+            console.error('Error fetching weapons:', error);
+            ccWeaponTableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+        }
+    }
+
+    function updateCompanyWeaponTable(weapons) {
+        ccWeaponTableBody.innerHTML = '';
+        if (weapons.length === 0) {
+            ccWeaponTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No weapons found.</td></tr>';
+            return;
+        }
+        weapons.forEach(w => {
+            let statusColor = '#4a6981';
+            if (w.status === 'Issued') statusColor = '#28a745';
+            if (w.status === 'In-Repair') statusColor = '#dc3545';
+            const row = `
+                <tr>
+                    <td>${w.serial_number}</td>
+                    <td>${w.type}</td>
+                    <td>${w.assigned_to || 'N/A'}</td>
+                    <td style="color: ${statusColor}">${w.status}</td>
+                </tr>
+            `;
+            ccWeaponTableBody.innerHTML += row;
+        });
+    }
+
+    async function fetchOverviewWeapons(searchTerm) {
+    try {
+        // We reuse the existing API route
+        const response = await fetch(`/api/cc-search-weapons?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const weapons = await response.json();
+        updateOverviewWeaponTable(weapons);
+    } catch (error) {
+        console.error('Error fetching overview weapons:', error);
+        koteOverviewTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateOverviewWeaponTable(weapons) {
+    koteOverviewTableBody.innerHTML = ''; // Clear the table
+    if (weapons.length === 0) {
+        koteOverviewTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No weapons found.</td></tr>';
+        return;
+    }
+    weapons.forEach(w => {
+        let statusColor = '#4a6981';
+        if (w.status === 'Issued') statusColor = '#28a745';
+        if (w.status === 'In-Repair') statusColor = '#dc3545';
+        
+        const row = `
+            <tr>
+                <td>${w.serial_number}</td>
+                <td>${w.type}</td>
+                <td>${w.model}</td> 
+                <td>${w.assigned_to || 'N/A'}</td>
+                <td style="color: ${statusColor}">${w.status}</td>
+                <td>
+                    <button onclick="editWeaponMaintenance(${w.weapon_id})" style="font-size: 14px; padding: 5px 10px;">
+                        Update Maint.
+                    </button>
+                </td>
+            </tr>
+        `;
+        koteOverviewTableBody.innerHTML += row;
+    });
+}
+
+
+
+// --- (NEW) Weapon Ledger Search Functions ---
+async function fetchWeaponLedger(searchTerm) {
+    try {
+        const response = await fetch(`/api/kote/search-weapon-ledger?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const ledger = await response.json();
+        updateWeaponLedgerTable(ledger);
+    } catch (error) {
+        console.error('Error fetching weapon ledger:', error);
+        weaponLedgerTableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateWeaponLedgerTable(ledger) {
+    weaponLedgerTableBody.innerHTML = '';
+    if (ledger.length === 0) {
+        weaponLedgerTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No ledger entries found.</td></tr>';
+        return;
+    }
+    ledger.forEach(log => {
+        const row = `
+            <tr>
+                <td>${log.serial_number}</td>
+                <td>${log.name}</td>
+                <td>${log.date_issued_f}</td>
+                <td>${log.date_returned_f || '---'}</td>
+            </tr>
+        `;
+        weaponLedgerTableBody.innerHTML += row;
+    });
+}
+
+// --- (NEW) Ammo Log Search Functions ---
+async function fetchAmmoLog(searchTerm) {
+    try {
+        const response = await fetch(`/api/kote/search-ammo-log?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const ammoLog = await response.json();
+        updateAmmoLogTable(ammoLog);
+    } catch (error) {
+        console.error('Error fetching ammo log:', error);
+        ammoLogTableBody.innerHTML = '<tr><td colspan="5" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateAmmoLogTable(ammoLog) {
+    ammoLogTableBody.innerHTML = '';
+    if (ammoLog.length === 0) {
+        ammoLogTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No ammo logs found.</td></tr>';
+        return;
+    }
+    ammoLog.forEach(log => {
+        const row = `
+            <tr style="color: ${log.quantity_change > 0 ? '#28a745' : '#fff'}">
+                <td>${log.date_f}</td>
+                <td>${log.soldier_name}</td>
+                <td>${log.ammo_type}</td>
+                <td>${log.lot_number}</td>
+                <td>${log.quantity_change > 0 ? '+' : ''}${log.quantity_change}</td>
+            </tr>
+        `;
+        ammoLogTableBody.innerHTML += row;
+    });
+}
+
+// --- (NEW) Assignment Search Functions ---
+async function fetchAssignments(searchTerm) {
+    try {
+        const response = await fetch(`/api/kote/search-assignments?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const assignments = await response.json();
+        updateAssignmentsTable(assignments);
+    } catch (error) {
+        console.error('Error fetching assignments:', error);
+        assignmentsTableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+function updateAssignmentsTable(assignments) {
+    assignmentsTableBody.innerHTML = '';
+    if (assignments.length === 0) {
+        assignmentsTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No assignments found.</td></tr>';
+        return;
+    }
+    assignments.forEach(a => {
+        const row = `
+            <tr>
+                <td>${a.serial_number}</td>
+                <td>${a.name}</td>
+                <td>${a.rank}</td>
+                <td>
+                    <a href="/kote/deassign/${a.weapon_id}" 
+                       style="color: #d32f2f; text-decoration: none;"
+                       onclick="return confirm('Are you sure?')">
+                       De-assign
+                    </a>
+                </td>
+            </tr>
+        `;
+        assignmentsTableBody.innerHTML += row;
+    });
+}
+
+
+    // --- (NEW) Report Generation Functions ---
+    function generateKoteReport() {
+        reportOutputContainer.innerHTML = '<p>Generating report...</p>';
+        const reportType = koteReportTypeSelect.value;
+        let tableHTML = '';
+
+        if (reportType === 'inventory') {
+            // Build the Inventory Report
+            tableHTML = `<h3><%= companyName %> - Kote Inventory Report</h3>
+                         <p>Total Weapons: ${allCompanyWeapons.length}</p>
+                         <table>
+                            <thead>
+                                <tr>
+                                    <th>Weapon S/N</th>
+                                    <th>Type</th>
+                                    <th>Model</th>
+                                    <th>Assigned To</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+            allCompanyWeapons.forEach(w => {
+                let statusColor = '#4a6981';
+                if (w.status === 'Issued') statusColor = '#28a745';
+                if (w.status === 'In-Repair') statusColor = '#dc3545';
+                tableHTML += `
+                    <tr>
+                        <td>${w.serial_number}</td>
+                        <td>${w.type}</td>
+                        <td>${w.model}</td>
+                        <td>${w.allocated_to || 'N/A'}</td>
+                        <td style="color: ${statusColor}">${w.status}</td>
+                    </tr>
+                `;
+            });
+            tableHTML += '</tbody></table>';
+
+        } else if (reportType === 'ledger') {
+            // Build the Ledger Report
+            tableHTML = `<h3><%= companyName %> - Weapon Issue Ledger</h3>
+                         <p>Total Log Entries: ${allCompanyLedger.length}</p>
+                         <table>
+                            <thead>
+                                <tr>
+                                    <th>Weapon S/N</th>
+                                    <th>Soldier</th>
+                                    <th>Date Issued</th>
+                                    <th>Date Returned</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+            allCompanyLedger.forEach(log => {
+                tableHTML += `
+                    <tr>
+                        <td>${log.serial_number}</td>
+                        <td>${log.name}</td>
+                        <td>${log.date_issued_f}</td>
+                        <td>${log.date_returned_f || '---'}</td>
+                    </tr>
+                `;
+            });
+            tableHTML += '</tbody></table>';
+        }
+        reportOutputContainer.innerHTML = tableHTML;
+    }
+
+    function downloadKoteReport() {
+        const element = document.getElementById('report-output-container');
+        if (!element.querySelector('table')) {
+            alert('Please generate a report first.');
+            return;
+        }
+        
+        // Get the selected report name for the filename
+        const reportName = koteReportTypeSelect.options[koteReportTypeSelect.selectedIndex].text.replace(/\s+/g, '_');
+        const filename = `<%= companyName %>_${reportName}.pdf`;
+
+        const options = {
+            margin:       [0.5, 0.5, 0.5, 0.5],
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };
+
+        element.classList.add('pdf-export');
+        html2pdf().from(element).set(options).save().then(() => {
+            element.classList.remove('pdf-export');
+        }).catch((err) => {
+            console.error('PDF generation failed:', err);
+            element.classList.remove('pdf-export');
+        });
+    }
+
+    // ================================================================================= --
+    // --- 2. GLOBAL VARIABLES ---
+    // ================================================================================= --
+    
+    let editMaintModal, editMaintForm;
+    let ccWeaponSearch, ccWeaponTableBody;
+    let allCompanyWeapons, allCompanyLedger; 
+    let reportOutputContainer, generateKoteBtn, downloadKoteBtn, koteReportTypeSelect; 
+    let koteOverviewSearch, koteOverviewTableBody;
+    let weaponLedgerSearch, weaponLedgerTableBody; 
+    let ammoLogSearch, ammoLogTableBody;     
+    let assignmentSearch, assignmentsTableBody;      
+
+    // ================================================================================= --
+    // --- 3. PAGE LOAD EVENT LISTENER ---
+    // ================================================================================= --
+    
+    window.addEventListener("load", () => {
+        
+        // Store the main page data globally
+        allCompanyWeapons = <%- JSON.stringify(weapons) %>;
+        allCompanyLedger = <%- JSON.stringify(ledger) %>; // <-- NEW
+
+        // --- Fade-in & URL-cleaning ---
+        document.body.style.opacity = 0;
+        document.body.style.transition = "opacity 1.2s ease-in-out";
+        document.body.style.opacity = 1;
+        const url = new URL(window.location);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            const cleanPath = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanPath);
+        }
+
+        // --- Kote Search Logic ---
+        ccWeaponSearch = document.getElementById('cc-weapon-search');
+        ccWeaponTableBody = document.getElementById('cc-weapon-table-body');
+        if (ccWeaponSearch) {
+            ccWeaponSearch.addEventListener('keyup', () => {
+                fetchCompanyWeapons(ccWeaponSearch.value);
+            });
+        }
+
+        // --- Maintenance Modal Logic ---
+        editMaintModal = document.getElementById('edit-maint-modal');
+        editMaintForm = document.getElementById('edit-maint-form');
+        
+        // --- (UPDATED) Report Logic ---
+        reportOutputContainer = document.getElementById('report-output-container');
+        generateKoteBtn = document.getElementById('generate-kote-report-btn');
+        downloadKoteBtn = document.getElementById('download-kote-pdf-btn');
+        koteReportTypeSelect = document.getElementById('kote-report-type-select');
+        koteOverviewSearch = document.getElementById('kote-overview-search');
+        koteOverviewTableBody = document.getElementById('kote-overview-table-body');
+
+
+        // --- (NEW) Assignment Search Logic ---
+        assignmentSearch = document.getElementById('assignment-search-input');
+        assignmentsTableBody = document.getElementById('assignments-table-body');
+        
+
+
+
+        // --- (NEW) Weapon Ledger Search Logic ---
+        weaponLedgerSearch = document.getElementById('ledger-search-input');
+        weaponLedgerTableBody = document.getElementById('weapon-ledger-table-body');
+       
+
+        // --- (NEW) Ammo Log Search Logic ---
+        ammoLogSearch = document.getElementById('ammo-log-search-input');
+        ammoLogTableBody = document.getElementById('ammo-log-table-body');
+        if (ammoLogSearch) {
+            ammoLogSearch.addEventListener('keyup', () => {
+                fetchAmmoLog(ammoLogSearch.value);
+          });
+        }
+         if (weaponLedgerSearch) {
+          weaponLedgerSearch.addEventListener('keyup', () => {
+              fetchWeaponLedger(weaponLedgerSearch.value);
+          });
+        }
+        if (assignmentSearch) {
+          assignmentSearch.addEventListener('keyup', () => {
+              fetchAssignments(assignmentSearch.value);
+          });
+        }
+        if (koteOverviewSearch) {
+            koteOverviewSearch.addEventListener('keyup', () => {
+              fetchOverviewWeapons(koteOverviewSearch.value);
+            });
+        }
+        if (generateKoteBtn) {
+            generateKoteBtn.addEventListener('click', generateKoteReport);
+        }
+        if (downloadKoteBtn) {
+            downloadKoteBtn.addEventListener('click', downloadKoteReport);
+        }
+        
+        // --- Main Click Handler for Modals ---
+        window.onclick = function(event) {
+            if (event.target == editMaintModal) {
+                closeMaintModal();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

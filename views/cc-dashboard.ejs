@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Commander Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; transition: all 0.3s ease; }
+  body { background-color: #000; color: #fff; opacity: 0; animation: fadeIn 1s ease forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Header */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; background: #000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.7); border-radius: 0 0 20px 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: bold; color: #fff; }
+  header .nav-links a {
+    margin-left: 20px; padding: 8px 15px; border-radius: 8px;
+    text-decoration: none; color: #fff; font-weight: bold;
+  }
+  /* New Theme Color: Red */
+  header .nav-links a:hover { background: rgba(211,47,47,0.2); color: #d32f2f; }
+
+  /* Layout */
+  .dashboard-container { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: rgba(20,20,20,0.95); backdrop-filter: blur(12px);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 20px; display: flex; flex-direction: column;
+  }
+  /* New Theme Color: Red */
+  .sidebar h2 { margin-bottom: 20px; font-weight: bold; text-align: center; color: #d32f2f; }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li {
+    padding: 12px 10px; margin-bottom: 10px; cursor: pointer;
+    font-weight: bold; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff;
+  }
+  /* New Theme Color: Red */
+  .sidebar ul li:hover { background: rgba(211,47,47,0.2); color: #d32f2f; }
+  .sidebar ul li.active { background: rgba(211,47,47,0.3); color: #d32f2f; }
+
+  /* Main content */
+
+  .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+  .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+
+
+  .main-content { padding: 30px; display: flex; flex-direction: column; gap: 40px; }
+
+  .module-section {
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
+    border-radius: 25px; padding: 35px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none; transform: translateY(20px); opacity: 0;
+    animation: slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform: translateY(0); opacity: 1; } }
+  /* New Theme Color: Red */
+  .module-section h2 { margin-bottom: 25px; font-size: 2rem; color: #d32f2f; }
+
+  /* Cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.1);
+    border-radius: 15px; padding: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  /* New Theme Color: Red */
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(211,47,47,0.5); }
+
+  /* Button Group */
+  .button-group { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .module-section button {
+    padding: 14px 25px; border-radius: 12px; border: 2px solid #fff;
+    background: transparent; color: #fff; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(211,47,47,0.4); transition: all 0.3s ease;
+  }
+  /* New Theme Color: Red */
+  .module-section button:hover {
+    background: rgba(211,47,47,0.3); border-color: #d32f2f; transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(211,47,47,0.6);
+  }
+
+  /* Table */
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 20px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 15px;
+  }
+  th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background: rgba(255,255,255,0.1); color: #fff; }
+  /* New Theme Color: Red */
+  tr:hover { background: rgba(211,47,47,0.2); color: #d32f2f; }
+
+  /* Table-specific buttons (Approve/Reject) */
+  .btn-approve {
+    padding: 6px 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;
+    background: rgba(40, 167, 69, 0.3); color: #28a745; margin-right: 5px;
+  }
+  .btn-approve:hover { background: rgba(40, 167, 69, 0.5); }
+  .btn-reject {
+    padding: 6px 10px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;
+    background: rgba(220, 53, 69, 0.3); color: #dc3545;
+  }
+  .btn-reject:hover { background: rgba(220, 53, 69, 0.5); }
+
+  footer {
+    background: rgba(20,20,20,0.9); backdrop-filter: blur(12px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5); padding: 30px 40px;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+  }
+  /* New Theme Color: Red */
+  footer div h3 { margin-bottom: 10px; color: #d32f2f; }
+  footer div ul { list-style: none; }
+  footer div ul li { margin-bottom: 5px; color: #fff; }
+  footer div ul li:hover { color: #d32f2f; cursor: pointer; }
+
+  @media(max-width: 900px) { .dashboard-container { grid-template-columns: 1fr; } }
+</style>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> - <%= companyName %></h1>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+      <li onclick="showSection('overview', this)" class="active">Company Overview</li>
+      <li onclick="showSection('personnel', this)">Personnel Roster</li>
+      <li onclick="showSection('leave', this)">Leave Requests</li>
+      <li onclick="showSection('kote', this)">Company Kote</li>
+      <li onclick="showSection('alerts', this)">Alerts</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    
+    <% if (error) { %><div class="error-alert" style="background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert" style="background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><%= success %></div><% } %>
+
+    <section id="overview" class="module-section" style="display:block;">
+      <h2>Company Overview (<%= companyName %>)</h2>
+      <div class="card-container">
+        <div class="card"><h3>Posted Strength</h3><p><%= stats.postedStrength %> Soldiers</p></div>
+        <div class="card"><h3>On Leave</h3><p><%= stats.onLeave %> Soldiers</p></div>
+        <div class="card"><h3>Serviceable Weapons</h3><p><%= stats.serviceableWeapons %> / <%= stats.totalWeapons %></p></div>
+        <div class="card"><h3>Pending Leave</h3><p><%= stats.pendingLeaves %> Requests</p></div>
+      </div>
+    </section>
+
+    <section id="personnel" class="module-section">
+      <h2>Personnel Roster (Alpha Coy)</h2>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="cc-personnel-search" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Roster:</label>
+        <input type="text" id="cc-personnel-search" placeholder="Search by Id,name or rank..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+      <table>
+        <thead><tr><th>Soldier ID</th><th>Name</th><th>Rank</th><th>Status</th></tr></thead>
+        <tbody id="cc-personnel-table-body">
+          <% personnel.forEach(p => { %>
+            <tr>
+              <td><%= p.soldier_id %></td>
+              <td><%= p.name %></td>
+              <td><%= p.rank %></td>
+              <td><%= p.status %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="leave" class="module-section">
+      <h2>Pending Leave Requests (<%= companyName %>)</h2>
+      <p>Approve or reject leave applications for your company.</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Rank</th><th>Leave Type</th><th>Dates</th><th>Reason</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <% if (pendingLeaves.length > 0) { %>
+            <% pendingLeaves.forEach(leave => { %>
+              <tr>
+                <td><%= leave.soldier_name %></td>
+                <td><%= leave.rank %></td>
+                <td><%= leave.leave_type %></td>
+                <td><%= leave.start_date_formatted %> to <%= leave.end_date_formatted %></td>
+                <td><%= leave.reason %></td>
+                <td>
+                  <a href="/leave/approve/<%= leave.leave_id %>" class="btn-approve" style="text-decoration: none;" onclick="return confirm('Approve this leave?')">Approve</a>
+                  <a href="/leave/reject/<%= leave.leave_id %>" class="btn-reject" style="text-decoration: none;" onclick="return confirm('Reject this leave?')">Reject</a>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="6" style="text-align: center;">No pending leave requests.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="kote" class="module-section">
+      <h2>Company Kote (Weapon Status)</h2>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="cc-weapon-search" style="font-weight: bold; margin-bottom: 5px; display: block;">Search Kote:</label>
+        <input type="text" id="cc-weapon-search" placeholder="Search by Serial No, Type, or Assigned Soldier..." 
+               style="padding:12px; border-radius:10px; width:100%; background: #333; color: white; border: 1px solid #555;">
+      </div>
+      <table>
+        <thead><tr><th>Weapon S/N</th><th>Type</th><th>Assigned To</th><th>Status</th></tr></thead>
+        <tbody id="cc-weapon-table-body">
+          <% weapons.forEach(w => { %>
+            <tr>
+              <td><%= w.serial_number %></td>
+              <td><%= w.type %></td>
+              <td><%= w.assigned_to || 'N/A' %></td>
+              <td style="color: <%= w.status === 'In-Store' ? '#45b7e9' : (w.status === 'Issued' ? '#28a745' : '#dc3545') %>">
+                <%= w.status %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="alerts" class="module-section">
+      <h2>Company Alerts</h2>
+      <table>
+        <thead><tr><th>Alert</th><th>Message</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>
+          <% if (alerts.length > 0) { %>
+            <% alerts.forEach(alert => { %>
+              <tr style="color: #ffc107;">
+                <td><%= alert.alert_type %></td>
+                <td><%= alert.message %></td>
+                <td><%= alert.alert_date_formatted %></td>
+                <td>
+                  <a href="/alert/resolve/<%= alert.alert_id %>" style="color: #d32f2f; text-decoration: none;">Dismiss</a>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align: center;">No active alerts for your company.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Company Command</h3>
+    <ul>
+      <li>Roster</li>
+      <li>Leave Management</li>
+      <li>Kote Inventory</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>Battalion Reports</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+function showSection(sectionId, element) {
+  document.querySelectorAll('.module-section').forEach(sec => sec.style.display='none');
+  document.getElementById(sectionId).style.display='block';
+  document.querySelectorAll('.sidebar ul li').forEach(btn => btn.classList.remove('active'));
+  element.classList.add('active');
+}
+document.body.style.opacity = 0;
+window.addEventListener("load", () => {
+  /* Set the first section to display by default */
+  document.getElementById('overview').style.display = 'block';  
+  document.body.style.transition = "opacity 1.2s ease-in-out";
+  document.body.style.opacity = 1;
+
+
+  // URL-cleaning logic
+      const url = new URL(window.location);
+      if (url.searchParams.has('success') || url.searchParams.has('error')) {
+          const cleanPath = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanPath);
+      }
+});
+
+
+
+// --- NEW JAVASCRIPT for CC Personnel Search ---
+
+// Store the current company ID (passed from app.js) for use in APIs
+// We need to make sure 'companyId' is passed in the res.render for this to work
+const currentCompanyId = "<%= (typeof companyId !== 'undefined') ? companyId : user.company_id %>";
+
+// 1. Get references to the elements
+const ccPersonnelSearch = document.getElementById('cc-personnel-search');
+const ccPersonnelTableBody = document.getElementById('cc-personnel-table-body');
+
+// 2. Add listener to the search input
+if (ccPersonnelSearch) {
+    ccPersonnelSearch.addEventListener('keyup', () => {
+        fetchCompanyPersonnel(ccPersonnelSearch.value);
+    });
+}
+
+// 3. This function calls your new API
+async function fetchCompanyPersonnel(searchTerm) {
+    try {
+        const response = await fetch(`/api/cc-search-personnel?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const personnel = await response.json();
+        updateCompanyPersonnelTable(personnel); // Call the helper function
+    } catch (error) {
+        console.error('Error fetching personnel:', error);
+        ccPersonnelTableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+// 4. This helper function rebuilds the table
+function updateCompanyPersonnelTable(personnel) {
+    ccPersonnelTableBody.innerHTML = ''; // Clear the table
+
+    if (personnel.length === 0) {
+        ccPersonnelTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No personnel found.</td></tr>';
+        return;
+    }
+
+    personnel.forEach(p => {
+        const statusColor = p.status === 'Active' ? '#28a745' : '#ffc107';
+        const row = `
+            <tr>
+                <td>${p.soldier_id}</td>
+                <td>${p.name}</td>
+                <td>${p.rank}</td>
+                <td style="color: ${statusColor}">${p.status}</td>
+            </tr>
+        `;
+        ccPersonnelTableBody.innerHTML += row;
+    });
+}
+
+// --- NEW JAVASCRIPT for CC Kote Search ---
+
+// 1. Get references to the elements
+const ccWeaponSearch = document.getElementById('cc-weapon-search');
+const ccWeaponTableBody = document.getElementById('cc-weapon-table-body');
+
+// 2. Add listener to the search input
+if (ccWeaponSearch) {
+    ccWeaponSearch.addEventListener('keyup', () => {
+        fetchCompanyWeapons(ccWeaponSearch.value);
+    });
+}
+
+// 3. This function calls your new API
+async function fetchCompanyWeapons(searchTerm) {
+    try {
+        const response = await fetch(`/api/cc-search-weapons?term=${searchTerm}&company_id=${currentCompanyId}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const weapons = await response.json();
+        updateCompanyWeaponTable(weapons); // Call the helper function
+    } catch (error) {
+        console.error('Error fetching weapons:', error);
+        ccWeaponTableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+    }
+}
+
+// 4. This helper function rebuilds the table
+function updateCompanyWeaponTable(weapons) {
+    ccWeaponTableBody.innerHTML = ''; // Clear the table
+
+    if (weapons.length === 0) {
+        ccWeaponTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No weapons found.</td></tr>';
+        return;
+    }
+
+    weapons.forEach(w => {
+        let statusColor = '#45b7e9'; // In-Store
+        if (w.status === 'Issued') statusColor = '#28a745';
+        if (w.status === 'In-Repair') statusColor = '#dc3545';
+        
+        const row = `
+            <tr>
+                <td>${w.serial_number}</td>
+                <td>${w.type}</td>
+                <td>${w.assigned_to || 'N/A'}</td>
+                <td style="color: ${statusColor}">${w.status}</td>
+            </tr>
+        `;
+        ccWeaponTableBody.innerHTML += row;
+    });
+}
+
+</script>
+
+</body>
+</html>

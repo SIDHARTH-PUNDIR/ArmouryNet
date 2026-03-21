@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adjutant Dashboard – Personnel & Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  /* Reset & Base */
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; transition:0.3s ease; }
+  body { background: #000; color:#fff; opacity:0; animation:fadeIn 1s forwards; }
+
+  @keyframes fadeIn { to { opacity:1; } }
+
+  /* Header */
+  header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 40px; background:#000; box-shadow:0 2px 15px rgba(0,0,0,0.7); border-radius:0 0 20px 20px;
+  }
+  header h1 { font-size:1.8rem; color:#fff; font-weight:700; }
+  header .nav-links a {
+    margin-left:15px; padding:10px 2px; border-radius:12px;
+    text-decoration:none; color:#fff; font-weight:600;
+  }
+  header .nav-links a:hover {
+    background:rgba(220,53,69,0.2); color:#dc3545; transform:scale(1.05);
+  }
+
+  /* Layout */
+  .dashboard-container { display:grid; grid-template-columns:250px 1fr; min-height:calc(100vh - 80px); }
+
+  /* Sidebar */
+  .sidebar {
+    background:rgba(20,20,20,0.95); backdrop-filter:blur(12px);
+    box-shadow:2px 0 15px rgba(0,0,0,0.7);
+    padding:25px; display:flex; flex-direction:column;
+  }
+  .sidebar h2 { text-align:center; margin-bottom:25px; color:#dc3545; font-weight:700; }
+  .sidebar ul { list-style:none; }
+  .sidebar ul li {
+    padding:14px 12px; margin-bottom:12px; cursor:pointer; border-radius:12px;
+    background:rgba(255,255,255,0.05); font-weight:600; color:#fff; display:flex; align-items:center;
+  }
+  .sidebar ul li.active, .sidebar ul li:hover { background:rgba(220,53,69,0.3); color:#dc3545; transform:translateX(5px); }
+
+  /* Main content */
+
+  /* Error Alert */
+  .error-alert {
+  background-color: #dc3545; /* A strong red */
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 30px; /* Space it out from the content below */
+  border: 1px solid #ff7b88;
+}
+
+/* Success Alert */
+
+.success-alert {
+  background-color: #28a745; /* A success green */
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  border: 1px solid #34c759;
+}
+
+
+  .main-content { padding:35px; display:flex; flex-direction:column; gap:45px; }
+
+  .module-section {
+    background:rgba(255,255,255,0.05); backdrop-filter:blur(15px);
+    border-radius:25px; padding:35px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.5); display:none; transform:translateY(20px); opacity:0;
+    animation:slideFade 0.5s forwards;
+  }
+  @keyframes slideFade { to { transform:translateY(0); opacity:1; } }
+
+  .module-section h2 { margin-bottom:25px; font-size:2rem; color:#dc3545; }
+
+ /* Form Styles */
+  .form-container { max-width: 90%; margin: 20px auto; padding: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: bold; color: #ccc; }
+        .form-group input, .form-group select { padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; }
+        .error-alert { background: #dc3545; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .success-alert { background: #28a745; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+
+  /* Buttons */
+  .module-section button {
+    margin-right:18px; margin-bottom:12px; padding:14px 25px;
+    border-radius:12px; border:2px solid #fff;
+    background:transparent; color:#fff; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 15px rgba(220,53,69,0.4);
+  }
+  .module-section button:hover {
+    background:rgba(220,53,69,0.3); border-color:#dc3545; transform:scale(1.05); box-shadow:0 6px 20px rgba(220,53,69,0.6);
+  }
+
+  /* Card style table */
+  table {
+    width:100%; border-collapse:separate; border-spacing:0 10px; margin-top:25px;
+  }
+  th, td {
+    padding:14px 20px; text-align:left; border-radius:12px;
+  }
+  th { background:rgba(255,255,255,0.1); }
+  tr { background:rgba(255,255,255,0.05); transition:0.3s; }
+  tr:hover { background:rgba(220,53,69,0.15); transform:translateX(5px); }
+
+  /* Cards for profile / info */
+  .card-container { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:25px; }
+  .card {
+    background:rgba(255,255,255,0.05); backdrop-filter:blur(12px);
+    border-radius:20px; padding:25px; box-shadow:0 10px 20px rgba(0,0,0,0.5);
+    transition:0.3s;
+  }
+  .card:hover { transform:translateY(-5px) scale(1.02); box-shadow:0 15px 25px rgba(220,53,69,0.6); }
+
+  .card h3 { margin-bottom:15px; color:#dc3545; font-size:1.5rem; }
+  .card p { margin-bottom:10px; }
+
+
+  /* --- Styles for Modal --- */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    overflow: auto;
+    /* Center the content */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    /* We'll use the .module-section's background and shadow */
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-radius: 25px;
+    padding: 35px;
+    
+    width: 60%;
+    max-width: 700px;
+    position: relative;
+    animation: slideFade 0.3s forwards;
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
+
+.modal-content h2 { 
+    color: #dc3545; /* Adjutant's theme color */
+    margin-bottom: 25px;
+    font-size: 2rem;
+}
+
+/* A new grid for the modal info */
+.modal-info-grid { 
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+.modal-info-grid p { font-size: 1.1rem; line-height: 1.6; }
+.modal-info-grid strong { color: #ccc; }
+
+/* Styles for the action buttons */
+.modal-actions { text-align: right; }
+.modal-actions .btn {
+    padding: 12px 25px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-left: 15px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    border: none;
+}
+.btn-approve { background-color: #28a745; color: white; }
+.btn-approve:hover { background-color: #218838; }
+.btn-reject { background-color: #dc3545; color: white; }
+.btn-reject:hover { background-color: #c82333; }
+
+/* PDF Export Styles */
+.pdf-export,
+.pdf-export h3,
+.pdf-export p,
+.pdf-export td {
+    color: #000 !important; /* Force text to black */
+    background: #fff !important; /* Force background to white */
+}
+
+  /* Footer */
+  footer {
+    background:rgba(20,20,20,0.9); backdrop-filter:blur(12px);
+    box-shadow:0 -2px 15px rgba(0,0,0,0.5); padding:35px 40px;
+    display:flex; justify-content:space-around; flex-wrap:wrap; gap:25px;
+  }
+  footer div h3 { margin-bottom:15px; color:#dc3545; }
+  footer div ul { list-style:none; }
+  footer div ul li { margin-bottom:8px; color:#fff; cursor:pointer; }
+  footer div ul li:hover { color:#dc3545; }
+
+  /* Responsive */
+  @media(max-width:900px) { .dashboard-container { grid-template-columns:1fr; } }
+</style>
+<script>
+    window.addEventListener('pageshow', function(event) {
+        // The event.persisted property is true if the page is
+        // being restored from the back-forward cache.
+        if (event.persisted) {
+            // Force a full reload from the server.
+            window.location.reload();
+        }
+    });
+</script>
+</head>
+<body>
+
+<header>
+  <h1><%= user.rank %> <%= user.name %> - Adjutant Dashboard – Personnel & Administration</h1>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a onclick="showSection('leave-record', this)">Leave Records</a>
+    <a onclick="showSection('reports', this)">Reports</a>
+    <a href="/logout">Logout</a>
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+      <li onclick="showSection('overview', this)" class="active">Overview</li>
+      <li onclick="showSection('personnel', this)">Manage Personnel</li>
+      <li onclick="showSection('leave', this)">Leave Management</li>
+      <li onclick="showSection('reports', this)">Generate Reports</li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+
+    <% if (error) { %><div class="error-alert"><%= error %></div><% } %>
+    <% if (success) { %><div class="success-alert"><%= success %></div><% } %>
+
+    <!-- Overview -->
+    <section id="overview" class="module-section" style="display:block;">
+      <h2>Personnel & Leave Overview</h2>
+      <div class="card-container">
+        <div class="card">
+          <h3>Pending Leaves</h3>
+          <p><%= stats.pendingLeaves %> Applications</p>
+        </div>
+        <div class="card">
+          <h3>Active Soldiers</h3>
+          <p><%= stats.totalStrength %> Soldiers</p>
+        </div>
+        <div class="card">
+          <h3>On Leave</h3>
+          <p><%= stats.onLeave %> Soldiers</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Manage Personnel -->
+    <section id="personnel" class="module-section">
+      <h2>Manage Personnel</h2>
+      <div class="card-container">
+        <div class="card">
+          <button onclick="showSection('add-soldier', this)">Add Soldier</button>
+        </div>
+        <div class="card">
+          <input type="text" id="personnel-search-input" placeholder="Search soldier by name, rank or company..." style="padding:12px; border-radius:10px; width:100%;">
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Rank</th><th>Company</th><th>Status</th></tr></thead>
+        <tbody id="personnel-table-body">
+          <% personnel.forEach(soldier => { %>
+              <tr>
+                <td><%= soldier.name %></td>
+                <td><%= soldier.rank %></td>
+                <td><%= soldier.company_name %></td>
+                <td>
+                  <button onclick="editSoldier(<%= soldier.soldier_id %>)" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                  <a href="/personnel/set-status/<%= soldier.soldier_id %>/Discharged" style="color: #dc3545; text-decoration: none;" onclick="return confirm('Are you sure?')">Discharge</a>
+                </td>
+              </tr>
+            <% }) %>
+        </tbody>
+      </table>
+    </section>
+
+        <!-- Add / Edit Soldier Forms -->
+   <section id="add-soldier" class="module-section">
+            <h2>Add New Soldier</h2>
+            <div class="form-container">
+                <form action="/personnel/add" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required></div>
+                        <div class="form-group"><label for="rank">Rank</label><input type="text" id="rank" name="rank" required></div>
+                        <div class="form-group"><label for="dob">Date of Birth</label><input type="date" id="dob" name="dob"></div>
+                        <div class="form-group"><label for="contact">Contact</label><input type="text" id="contact" name="contact"></div>
+                        <div class="form-group"><label for="company_id">Company</label>
+                            <select id="company_id" name="company_id" required>
+                                <% companies.forEach(company => { %>
+                                    <option value="<%= company.company_id %>"><%= company.company_name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <hr class="full-width" style="border-color: #555; margin: 10px 0;">
+                        <div class="form-group"><label for="username">Username</label><input type="text" id="username" name="username" required></div>
+                        <div class="form-group"><label for="password">Initial Password</label><input type="password" id="password" name="password" required></div>
+                    </div>
+                    <button type="submit" style="margin-top: 20px;">Register Soldier</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="edit-soldier" class="module-section">
+            <h2>Edit Soldier Record</h2>
+            <div class="form-container">
+                <form id="edit-form" method="POST" action="/personnel/update">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="edit-name">Full Name</label>
+                            <input type="text" id="edit-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-rank">Rank</label>
+                            <input type="text" id="edit-rank" name="rank" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-contact">Contact</label>
+                            <input type="text" id="edit-contact" name="contact">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-company_id">Company</label>
+                            <select id="edit-company_id" name="company_id" required>
+                                <% companies.forEach(company => { %>
+                                    <option value="<%= company.company_id %>"><%= company.company_name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" style="margin-top: 20px;">Update Soldier</button>
+                </form>
+            </div>
+        </section>
+
+    <!-- Leave Management -->
+    <section id="leave" class="module-section">
+      <h2>Pending Leave Applications</h2>
+      <div class="card-container">
+        <div class="card" style="grid-column: 1 / -1;">
+            <label for="pending-leave-search">Search Pending Leaves:</label>
+            <input type="text" id="pending-leave-search" placeholder="Search by name, rank, or company..." style="padding:12px; border-radius:10px; width:100%; margin-top: 10px;">
+        </div>
+    </div>
+      <table>
+        <thead><tr><th>Soldier</th><th>Rank</th><th>Company</th><th>From</th><th>To</th><th>Reason</th><th>Actions</th></tr></thead>
+        <tbody id="pending-leave-table-body">
+          <% if (leaves.length > 0) { %>
+              <% leaves.forEach(leave => { %>
+                <tr>
+                    <td><%= leave.soldier_name %></td>
+                    <td><%= leave.rank %></td>
+                    <td><%= leave.company_name %></td>
+                    <td><%= leave.start_date %></td>
+                    <td><%= leave.end_date %></td>
+                    <td><%= leave.reason %></td>
+                    <td>
+                        <button onclick="viewLeaveDetails(<%= leave.leave_id %>)" style="font-size: 14px; padding: 5px 10px;">View</button>
+                    </td>
+    
+                </tr>
+              <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" style="text-align: center;">No pending leave applications.</td>
+                </tr>
+            <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Leave Details Modal -->
+    <div id="leave-modal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2>Leave Application Details</h2>
+        
+        <div class="modal-info-grid">
+            <p><strong>Soldier:</strong></p>     <p><span id="modal-soldier-name"></span></p>
+            <p><strong>Soldier ID:</strong></p>  <p><span id="modal-soldier-id"></span></p>
+            <p><strong>Rank:</strong></p>        <p><span id="modal-soldier-rank"></span></p>
+            <p><strong>Company:</strong></p>     <p><span id="modal-soldier-company"></span></p>
+            <p><strong>Leave Type:</strong></p>  <p><span id="modal-leave-type"></span></p>
+            <p><strong>Dates:</strong></p>       <p><span id="modal-leave-dates"></span></p>
+            <p><strong>Reason:</strong></p>      <p><span id="modal-leave-reason"></span></p>
+            <hr style="grid-column: 1 / -1; border-color: #444; margin-top: 10px;">
+            <p><strong>Last Leave:</strong></p> <p><span id="modal-last-leave"></span></p>
+        </div>
+
+        <div class="modal-actions">
+            <a id="modal-reject-link" class="btn btn-reject" onclick="return confirm('Are you sure you want to REJECT this leave?')">Reject</a>
+            <a id="modal-approve-link" class="btn btn-approve" onclick="return confirm('Are you sure you want to APPROVE this leave?')">Approve</a>
+        </div>
+    </div>
+</div>
+
+
+      <!-- Full Leave Record Section -->
+    <section id="leave-record" class="module-section">
+      <h2>Full Leave Record (All Statuses)</h2>
+      
+      <div class="card-container">
+          <div class="card" style="grid-column: 1 / -1;">
+            <label for="leave-search-input">Search All Leave Records:</label>
+            <input type="text" id="leave-search-input" placeholder="Search by name, rank, or company..." style="padding:12px; border-radius:10px; width:100%; margin-top: 10px;">
+          </div>
+      </div>
+
+      <table>
+        <thead>
+            <tr>
+                <th>Soldier</th>
+                <th>Rank</th>
+                <th>Company</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="leave-table-body">
+          <% if (allLeaveRecords.length > 0) { %>
+              <% allLeaveRecords.forEach(leave => { %>
+                <tr>
+                    <td><%= leave.soldier_name %></td>
+                    <td><%= leave.rank %></td>
+                    <td><%= leave.company_name %></td>
+                    <td><%= leave.start_date %></td>
+                    <td><%= leave.end_date %></td>
+                    <td><%= leave.reason %></td>
+                    <td style="font-weight: bold; color: <%= leave.status === 'Approved' ? '#28a745' : (leave.status === 'Rejected' ? '#dc3545' : '#ffc107') %>">
+                        <%= leave.status %>
+                    </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" style="text-align: center;">No leave records found.</td>
+              </tr>
+            <% } %>
+        </tbody>
+      </table>
+    </section>
+    
+
+    <!-- Reports -->
+
+    <section id="reports" class="module-section">
+    <h2>Generate Roll Call Report</h2>
+    
+    <!-- This is the new filter bar -->
+    <div class="filter-bar" style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        
+        <div class="form-group" style="flex: 1; min-width: 250px;">
+            <label for="report-company-filter" style="font-weight: bold; margin-bottom: 5px; display: block;">Select Company:</label>
+            <select id="report-company-filter" style="padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: white; width: 100%;">
+                <option value="all">All Companies (Full Battalion)</option>
+                <% companies.forEach(company => { %>
+                    <option value="<%= company.company_id %>"><%= company.company_name %></option>
+                <% }) %>
+            </select>
+        </div>
+        
+        <!-- Updated button IDs -->
+        <button id="generate-roll-call-btn" style="align-self: flex-end;">Generate Report</button>
+        <button id="download-pdf-btn" style="align-self: flex-end;">Download as PDF</button>
+    </div>
+    
+    <p>Generates a list of all active personnel and their current leave status.</p>
+
+    <div id="report-output-container" style="margin-top: 20px;">
+        <!-- The report table will be built here by JavaScript -->
+    </div>
+</section>
+  </main>
+</div>
+
+<footer>
+  <div>
+    <h3>Administration</h3>
+    <ul>
+      <li>Personnel Policies</li>
+      <li>Leave Records</li>
+      <li>Duty Management</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Quick Links</h3>
+    <ul>
+      <li>CO Communication</li>
+      <li>Reports</li>
+      <li>Logout</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+    // --- 1. TAB SWITCHING FUNCTION (No changes, this is correct) ---
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.module-section').forEach(sec => sec.style.display='none');
+        document.getElementById(sectionId).style.display='block';
+        
+        document.querySelectorAll('.sidebar ul li').forEach(btn => btn.classList.remove('active'));
+        if (element) {
+            element.classList.add('active');
+        }
+    }
+    
+    // --- 2. FADE-IN ON LOAD (No changes, this is correct) ---
+    document.body.style.opacity = 0;
+    window.addEventListener("load", () => {
+        document.body.style.transition = "opacity 1.2s ease-in-out";
+        document.body.style.opacity = 1;
+    });
+
+    // --- 3. EDIT SOLDIER FUNCTION (No changes, this is correct) ---
+    async function editSoldier(soldierId) {
+        try {
+            const response = await fetch(`/api/personnel/${soldierId}`);
+            if (!response.ok) throw new Error(`Server returned ${response.status}`);
+            const soldier = await response.json();
+
+            document.getElementById('edit-name').value = soldier.name;
+            document.getElementById('edit-rank').value = soldier.rank;
+            document.getElementById('edit-contact').value = soldier.contact || '';
+            document.getElementById('edit-company_id').value = soldier.company_id;
+            
+            const editForm = document.getElementById('edit-form');
+            editForm.action = `/personnel/update/${soldierId}`;
+
+            showSection('edit-soldier', null); 
+        } catch (error) {
+            console.error('Error fetching soldier for edit:', error);
+            alert('Could not load soldier data.');
+        }
+    }
+
+    // --- 4. PERSONNEL SEARCH (No changes, this is correct) ---
+    const searchInput = document.getElementById('personnel-search-input');
+    const tableBody = document.getElementById('personnel-table-body');
+
+    searchInput.addEventListener('keyup', (e) => {
+        fetchPersonnel(e.target.value);
+    });
+
+    async function fetchPersonnel(searchTerm) {
+        try {
+            const response = await fetch(`/api/search-personnel?term=${searchTerm}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const soldiers = await response.json();
+            updatePersonnelTable(soldiers);
+        } catch (error) {
+            console.error('Error fetching personnel:', error);
+            tableBody.innerHTML = '<tr><td colspan="4" style="color: red; text-align: center;">Error loading data.</td></tr>';
+        }
+    }
+
+    function updatePersonnelTable(soldiers) {
+        tableBody.innerHTML = '';
+        if (soldiers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No soldiers found.</td></tr>';
+            return;
+        }
+        soldiers.forEach(soldier => {
+            const row = `
+                <tr>
+                    <td>${soldier.name}</td>
+                    <td>${soldier.rank}</td>
+                    <td>${soldier.company_name}</td>
+                    <td>
+                        <button onclick="editSoldier(${soldier.soldier_id})" style="font-size: 14px; padding: 5px 10px;">Edit</button>
+                        <a href="/personnel/set-status/${soldier.soldier_id}/Discharged" style="color: #dc3545; text-decoration: none;" onclick="return confirm('Are you sure?')">Discharge</a>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    // --- 5. PENDING LEAVE SEARCH (THIS WAS MISSING) ---
+    const pendingLeaveSearchInput = document.getElementById('pending-leave-search');
+    const pendingLeaveTableBody = document.getElementById('pending-leave-table-body');
+    
+    // Check if the element exists before adding a listener (prevents errors on other pages)
+    if (pendingLeaveSearchInput) {
+        pendingLeaveSearchInput.addEventListener('keyup', () => {
+            fetchPendingLeaveRecords();
+        });
+    }
+
+    async function fetchPendingLeaveRecords() {
+        const searchTerm = pendingLeaveSearchInput.value;
+        try {
+            const response = await fetch(`/api/search-leave?term=${searchTerm}&status=Pending`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const pendingLeaves = await response.json();
+            updatePendingLeaveTable(pendingLeaves);
+        } catch (error) {
+            console.error('Error fetching pending leave:', error);
+            pendingLeaveTableBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Error loading data.</td></tr>';
+        }
+    }
+
+    function updatePendingLeaveTable(pendingLeaves) {
+        pendingLeaveTableBody.innerHTML = '';
+        if (pendingLeaves.length === 0) {
+            pendingLeaveTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No pending leaves found.</td></tr>';
+            return;
+        }
+        pendingLeaves.forEach(leave => {
+            const row = `
+                <tr>
+                    <td>${leave.soldier_name}</td>
+                    <td>${leave.rank}</td>
+                    <td>${leave.company_name}</td>
+                    <td>${leave.start_date}</td>
+                    <td>${leave.end_date}</td>
+                    <td>${leave.reason}</td>
+                </tr>
+            `;
+            pendingLeaveTableBody.innerHTML += row;
+        });
+    }
+
+
+
+
+
+    // --- 6. LEAVE DETAILS MODAL FUNCTIONALITY ---
+    const leaveModal = document.getElementById('leave-modal');
+
+// Function to open the modal and fetch data
+async function viewLeaveDetails(leaveId) {
+    try {
+        const response = await fetch(`/api/leave-details/${leaveId}`);
+        if (!response.ok) throw new Error('Could not fetch leave details');
+        
+        const data = await response.json();
+        
+        // Populate the modal
+        document.getElementById('modal-soldier-name').innerText = data.leave.soldier_name;
+        document.getElementById('modal-soldier-id').innerText = data.leave.soldier_id;
+        document.getElementById('modal-soldier-rank').innerText = data.leave.rank;
+        document.getElementById('modal-soldier-company').innerText = data.leave.company_name;
+        document.getElementById('modal-leave-type').innerText = data.leave.leave_type;
+        document.getElementById('modal-leave-dates').innerText = `${data.leave.start_date} to ${data.leave.end_date}`;
+        document.getElementById('modal-leave-reason').innerText = data.leave.reason;
+        document.getElementById('modal-last-leave').innerText = `Returned on: ${data.lastLeaveEndDate}`;
+        
+        // Set the hrefs for the Approve/Reject buttons
+        document.getElementById('modal-approve-link').href = `/leave/approve/${leaveId}`;
+        document.getElementById('modal-reject-link').href = `/leave/reject/${leaveId}`;
+
+        // Show the modal
+        leaveModal.style.display = 'flex'; // Use flex to center it
+
+    } catch (error) {
+        console.error("Error in viewLeaveDetails:", error);
+        alert('Error: Could not load leave details.');
+    }
+}
+
+// Function to close the modal
+function closeModal() {
+    leaveModal.style.display = 'none';
+}
+
+// Close the modal if the user clicks on the grey overlay
+window.onclick = function(event) {
+    if (event.target == leaveModal) {
+        closeModal();
+    }
+}
+
+
+
+
+
+
+    // --- 7. FULL LEAVE RECORD SEARCH (THIS WAS MISSING) ---
+    const leaveSearchInput = document.getElementById('leave-search-input');
+    const leaveTableBody = document.getElementById('leave-table-body');
+
+    if (leaveSearchInput) {
+        leaveSearchInput.addEventListener('keyup', () => {
+            fetchLeaveRecords();
+        });
+    }
+
+    async function fetchLeaveRecords() {
+        const searchTerm = leaveSearchInput.value;
+        try {
+            const response = await fetch(`/api/search-leave?term=${searchTerm}&status=all`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const leaveRecords = await response.json();
+            updateLeaveTable(leaveRecords);
+        } catch (error) {
+            console.error('Error fetching leave records:', error);
+            leaveTableBody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Error loading data.</td></tr>';
+        }
+    }
+
+    function updateLeaveTable(leaveRecords) {
+        leaveTableBody.innerHTML = '';
+        if (leaveRecords.length === 0) {
+            leaveTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No leave records found.</td></tr>';
+            return;
+        }
+        leaveRecords.forEach(leave => {
+            let statusColor = '#ffc107'; // Pending
+            if (leave.status === 'Approved') statusColor = '#28a745';
+            else if (leave.status === 'Rejected') statusColor = '#dc3545';
+            const row = `
+                <tr>
+                    <td>${leave.soldier_name}</td>
+                    <td>${leave.rank}</td>
+                    <td>${leave.company_name}</td>
+                    <td>${leave.start_date}</td>
+                    <td>${leave.end_date}</td>
+                    <td>${leave.reason}</td>
+                    <td style="font-weight: bold; color: ${statusColor}">${leave.status}</td>
+                </tr>
+            `;
+            leaveTableBody.innerHTML += row;
+        });
+    }
+
+
+
+
+
+
+    // --- 7. ROLL CALL REPORT GENERATION AND PDF DOWNLOAD ---
+
+
+// 1. Get references to elements
+    const generateReportBtn = document.getElementById('generate-roll-call-btn');
+const downloadPdfBtn = document.getElementById('download-pdf-btn');
+const reportOutputContainer = document.getElementById('report-output-container');
+const reportCompanyFilter = document.getElementById('report-company-filter');
+
+// 2. Add listener to the generate button
+generateReportBtn.addEventListener('click', () => {
+    fetchRollCallReport();
+});
+
+downloadPdfBtn.addEventListener('click', () => {
+    downloadReportAsPDF();
+});
+
+// 3. This function calls the new report API
+// This function calls the new report API
+async function fetchRollCallReport() {
+    const companyId = reportCompanyFilter.value;
+    const companyName = reportCompanyFilter.options[reportCompanyFilter.selectedIndex].text;
+    reportOutputContainer.innerHTML = '<p>Generating report...</p>';
+    
+    try {
+        // No change here, the view handles all the new logic
+        const response = await fetch(`/api/report/roll-call?company_id=${companyId}`);
+        if (!response.ok) throw new Error('Could not fetch report data');
+        
+        const personnel = await response.json();
+        
+        // --- THIS SECTION IS UPDATED ---
+        
+        let tableHTML = `
+            <h3>Roll Call Report: ${companyName}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Rank</th>
+                        <th>Company</th>
+                        <th>Attendance</th>
+                        <th>Assigned Weapon</th>
+                        <th>Weapon Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let presentCount = 0;
+        personnel.forEach(soldier => {
+            // Set colors for attendance
+            let attendanceColor = '#28a745'; // Green for Present
+            if (soldier.attendance_status === 'On Leave') {
+                attendanceColor = '#ffc107'; // Yellow for On Leave
+            } else {
+                presentCount++;
+            }
+
+            // Set colors for weapon status
+            let weaponColor = '#fff'; // Default
+            if (soldier.weapon_status === 'With Soldier') {
+                weaponColor = '#28a745'; // Green
+            } else if (soldier.weapon_status === 'In-Store') {
+                weaponColor = '#45b7e9'; // Blue (from QM)
+            } else if (soldier.weapon_status.includes('Other') || soldier.weapon_status === 'In-Repair') {
+                weaponColor = '#dc3545'; // Red
+            }
+
+            tableHTML += `
+                <tr>
+                    <td>${soldier.name}</td>
+                    <td>${soldier.rank}</td>
+                    <td>${soldier.company_name}</td>
+                    <td style="color: ${attendanceColor}; font-weight: bold;">${soldier.attendance_status}</td>
+                    <td>${soldier.assigned_weapon_sn || 'N/A'}</td>
+                    <td style="color: ${weaponColor}; font-weight: bold;">${soldier.weapon_status}</td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        
+        // Update summary
+        tableHTML = `
+            <h3>Roll Call Report: ${companyName}</h3>
+            <p>Total Personnel: ${personnel.length} | Present: ${presentCount} | On Leave: ${personnel.length - presentCount}</p>
+        ` + tableHTML;
+
+        reportOutputContainer.innerHTML = tableHTML;
+        // --- END OF UPDATED SECTION ---
+
+    } catch (error) {
+        console.error('Error generating report:', error);
+        reportOutputContainer.innerHTML = '<p style="color: #dc3545;">Error: Could not load report.</p>';
+    }
+}
+        
+// 5. Update the Download PDF function
+// REPLACE your old function with this one
+function downloadReportAsPDF() {
+    
+    // 1. Get the element to print
+    const element = document.getElementById('report-output-container');
+    const table = element.querySelector('table');
+
+    if (!table) {
+        alert('Please generate a report first before downloading.');
+        return;
+    }
+
+    const filterText = reportCompanyFilter.options[reportCompanyFilter.selectedIndex].text;
+    const filename = `RollCall_${filterText.replace(/\s+/g, '_')}.pdf`;
+
+    const options = {
+        margin:       [0.5, 0.5, 0.5, 0.5],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+
+    // --- THIS IS THE FIX ---
+    
+    // 2. Add the 'pdf-export' class to force black text
+    element.classList.add('pdf-export');
+    
+    // 3. Run the PDF generator
+    html2pdf().from(element).set(options).save().then(() => {
+        
+        // 4. IMPORTANT: Remove the class after the PDF is saved
+        //    so your website looks normal again.
+        element.classList.remove('pdf-export');
+        
+    }).catch((err) => {
+        // 5. Also remove the class if an error happens
+        console.error('PDF generation failed:', err);
+        element.classList.remove('pdf-export');
+    });
+}
+
+
+
+
+    // --- 8. URL CLEANING SCRIPT (No changes, this is correct) ---
+    const url = new URL(window.location);
+    if (url.searchParams.has('success') || url.searchParams.has('error')) {
+        const cleanPath = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanPath);
+    }
+</script>
+
+</body>
+</html>
