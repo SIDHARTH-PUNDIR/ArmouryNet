@@ -23,13 +23,20 @@
 * **Transport (MTO) Management:** Vehicle fleet status, maintenance scheduling, and fuel logging.
 * **Automated Alerts:** Triggers and Events automatically generate alerts for low stock, upcoming maintenance, and expiry dates.
 * **Report Generation:** PDF export functionality for Roll Calls, Stock Ledgers, and Transaction Logs.
-<<<<<<< HEAD
-
 ---
 
-=======
-* **💳 VaultPay Integration:** Seamless integration with our custom-built native payment gateway for clearing Mess and Canteen dues directly from the Soldier Dashboard using a secure iframe SDK.
->>>>>>> 92b86a0 (Added PostgreSQL integration and payment API)
+## 💳 VaultPay Payment Integration
+
+ArmouryNet comes pre-integrated with **VaultPay**, a fully custom native payment gateway, allowing soldiers to clear outstanding Mess and Canteen bills directly from their dashboard.
+
+### How it works:
+1. **Drop-in SDK:** ArmouryNet loads the VaultPay Vanilla JS SDK directly into `soldier.ejs`.
+2. **Secure Iframe:** When a soldier clicks "Pay ₹500 with VaultPay", a secure React-based iframe checkout modal slides over the dashboard.
+3. **Cross-Origin Messaging:** Once the payment is verified using VaultPay's internal HMAC-SHA256 cryptography, the iframe securely passes a `postMessage` back to ArmouryNet to confirm the success!
+
+> **Note:** To test the VaultPay integration, ensure the VaultPay Node.js backend (`port 5001`) and React frontend (`port 5173`) are running simultaneously alongside ArmouryNet.
+
+---
 ## 🛠️ Tech Stack
 
 | Domain | Technologies |
