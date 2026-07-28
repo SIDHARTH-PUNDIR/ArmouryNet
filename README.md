@@ -5,7 +5,7 @@
   [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
   [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
   [![EJS](https://img.shields.io/badge/EJS-B4CA65?style=for-the-badge&logo=ejs&logoColor=black)](https://ejs.co/)
-  [![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
   [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 
   *ArmouryNet is a comprehensive, role-based web application designed to digitize and automate the logistical, personnel, and inventory management operations of a military battalion. It replaces manual registers with a centralized database, ensuring real-time tracking of weapons, ammunition, rations, vehicles, and personnel.*
@@ -43,7 +43,7 @@ ArmouryNet comes pre-integrated with **VaultPay**, a fully custom native payment
 |---|---|
 | **Frontend** | EJS (Embedded JavaScript Templates), CSS3, Client-side JavaScript |
 | **Backend** | Node.js, Express.js |
-| **Database** | MySQL (via `mysql2` with connection pooling & transactions) |
+| **Database** | PostgreSQL |
 | **Authentication** | Session-based auth with `bcrypt` password hashing |
 | **PDF Generation** | `html2pdf.js` (Client-side) |
 
@@ -62,16 +62,20 @@ npm install
 
 ### 3. Database Setup
 
-Open your MySQL Client (Workbench/Command Line).Run the schema.sql script (not included in repo, ensure you have the schema) to create the battalion_inventory database, tables, views, triggers, and stored procedures.
-Update db.js with your local MySQL credentials:JavaScript backend/db.js
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root', // Your User
-    password: 'your_password', // Your Password
-    database: 'battalion_inventory',
-    // ...
+Open your PostgreSQL Client (pgAdmin or psql command line). Run the schema.sql script (not included in the repo, ensure you have the schema) to create the battalion_inventory database, tables, views, triggers, and stored procedures.
+
+// backend/db.js
+const { Pool } = require('pg');
+
+const pool = new Pool({
+    user: 'postgres',                // Your PostgreSQL username
+    host: 'localhost',               // Database host
+    database: 'battalion_inventory', // Your database name
+    password: 'your_password',       // Your PostgreSQL password (e.g., '945801')
+    port: 5432,                      // Default PostgreSQL port
 });
 
+module.exports = pool;
 
 ### 4. Security Setup
 Before running the app for the first time, you must hash the default passwords in the database.
@@ -157,18 +161,23 @@ npm install
 
 ### 2️⃣ Database Setup
 
-Open your MySQL client (Workbench or Command Line) and run the `schema.sql` script to create the `battalion_inventory` database along with all tables, views, triggers, and stored procedures.
+Open your PostgreSQL client (pgAdmin or psql command line) and run the schema.sql script to create the battalion_inventory database along with all tables, views, triggers, and stored procedures.
 
-Then update `db.js` with your local MySQL credentials:
+Then update db.js with your local PostgreSQL credentials:
 
 ```javascript
 // db.js
-const pool = mysql.createPool({
+const { Pool } = require('pg');
+
+const pool = new Pool({
     host: 'localhost',
-    user: 'root',         // Your MySQL username
-    password: '',         // Your MySQL password
+    user: 'postgres',         // Your PostgreSQL username
+    password: 'your_password', // Your PostgreSQL password
     database: 'battalion_inventory',
+    port: 5432,               // Default PostgreSQL port
 });
+
+module.exports = pool;
 ```
 
 ### 3️⃣ Security Setup
@@ -217,41 +226,6 @@ This project was built as a team effort. The original repository — containing 
 > This repository is a personal fork maintained by [@SIDHARTH-PUNDIR](https://github.com/SIDHARTH-PUNDIR).
 
 ---
-
-## 👥 Contributors
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/Astic-x">
-        <img src="https://github.com/Astic-x.png" width="100px;" alt="Ankush Malik"/><br />
-        <sub><b>Ankush Malik</b></sub>
-      </a><br />
-      <sub>Backend & RBAC System</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/vishalsingh21xyz">
-        <img src="https://github.com/vishalsingh21xyz.png" width="100px;" alt="Vishal Vijay Singh"/><br />
-        <sub><b>Vishal Vijay Singh</b></sub>
-      </a><br />
-      <sub>Frontend & EJS Templates</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/SIDHARTH-PUNDIR">
-        <img src="https://github.com/SIDHARTH-PUNDIR.png" width="100px;" alt="Sidharth Pundir"/><br />
-        <sub><b>Sidharth Pundir</b></sub>
-      </a><br />
-      <sub>Database & Stored Procedures</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/akshatbansal13">
-        <img src="https://github.com/akshatbansal13.png" width="100px;" alt="Akshat Bansal"/><br />
-        <sub><b>Akshat Bansal</b></sub>
-      </a><br />
-      <sub>Logistics & Transport Module</sub>
-    </td>
-  </tr>
-</table>
 
 <p align="center">
   <br>
