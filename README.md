@@ -23,9 +23,13 @@
 * **Transport (MTO) Management:** Vehicle fleet status, maintenance scheduling, and fuel logging.
 * **Automated Alerts:** Triggers and Events automatically generate alerts for low stock, upcoming maintenance, and expiry dates.
 * **Report Generation:** PDF export functionality for Roll Calls, Stock Ledgers, and Transaction Logs.
+<<<<<<< HEAD
 
 ---
 
+=======
+* **💳 VaultPay Integration:** Seamless integration with our custom-built native payment gateway for clearing Mess and Canteen dues directly from the Soldier Dashboard using a secure iframe SDK.
+>>>>>>> 92b86a0 (Added PostgreSQL integration and payment API)
 ## 🛠️ Tech Stack
 
 | Domain | Technologies |
@@ -40,7 +44,70 @@
 
 ## 📂 Project Structure
 
-```text
+
+=======
+### 2. Clone and Install
+```bash
+git clone [https://github.com/Astic-x/ArmouryNet](https://github.com/Astic-x/ArmouryNet)
+cd armourynet
+npm install
+```
+
+### 3. Database Setup
+
+Open your MySQL Client (Workbench/Command Line).Run the schema.sql script (not included in repo, ensure you have the schema) to create the battalion_inventory database, tables, views, triggers, and stored procedures.
+Update db.js with your local MySQL credentials:JavaScript backend/db.js
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root', // Your User
+    password: 'your_password', // Your Password
+    database: 'battalion_inventory',
+    // ...
+});
+
+
+### 4. Security Setup
+Before running the app for the first time, you must hash the default passwords in the database.
+```bash
+node hashPasswords.js
+```
+
+This script updates all user passwords to the default hash for pass123.5. 
+
+Run the Application
+```bash
+node app.js
+```
+
+Access the application at http://localhost:3000.
+
+🔐 Default Credentials (for Testing)All accounts default to password: pass123 (after running the hasher script).
+Role                           Username             Dashboard Route
+Commanding Officer              co.user                 /co
+Adjutant                        adjutant.user           /adjutant
+Quartermaster                   qm.user                 /qm
+MTO                             mto.user                /mto
+Company Commander               cc.alpha                /cc-dashboard
+Weapon Incharge                 wi.alpha                /kote
+Ration Incharge                 ri.alpha                /ration
+Soldier                         soldier107              /soldier
+
+
+## 💳 VaultPay Payment Integration
+
+ArmouryNet comes pre-integrated with **VaultPay**, a fully custom native payment gateway, allowing soldiers to clear outstanding Mess and Canteen bills directly from their dashboard.
+
+### How it works:
+1. **Drop-in SDK:** ArmouryNet loads the VaultPay Vanilla JS SDK directly into `soldier.ejs`.
+2. **Secure Iframe:** When a soldier clicks "Pay ₹500 with VaultPay", a secure React-based iframe checkout modal slides over the dashboard.
+3. **Cross-Origin Messaging:** Once the payment is verified using VaultPay's internal HMAC-SHA256 cryptography, the iframe securely passes a `postMessage` back to ArmouryNet to confirm the success!
+
+> **Note:** To test the VaultPay integration, ensure the VaultPay Node.js backend (`port 5001`) and React frontend (`port 5173`) are running simultaneously alongside ArmouryNet.
+
+
+### 📂 Project Structure
+```Bash
+ (Added PostgreSQL integration and payment API)
 ArmouryNet/
 ├── public/
 │   ├── css/

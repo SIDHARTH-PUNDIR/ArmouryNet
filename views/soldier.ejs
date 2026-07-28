@@ -209,6 +209,7 @@
       <li onclick="showSection('profile', this)" class="active">My Profile</li>
       <li onclick="showSection('leave', this)">Leave Application</li>
       <li onclick="showSection('weapon', this)">My Weapon Details</li>
+      <li onclick="showSection('payment', this)">Mess / Canteen Bill</li>
       <li onclick="showSection('alerts', this)">Notifications</li>
     </ul>
   </aside>
@@ -371,6 +372,18 @@
       </table>
     </section>
 
+    <!-- Payment Section -->
+    <section id="payment" class="module-section">
+      <h2>Pay Mess / Canteen Bill</h2>
+      <div class="profile-card">
+        <h3>Clear Outstanding Dues</h3>
+        <p style="text-align: center; margin-bottom: 20px;">Use our secure VaultPay gateway to safely clear your dues.</p>
+        <div class="btn-group">
+          <button id="pay-vaultpay-btn">Pay ₹500 with VaultPay</button>
+        </div>
+      </div>
+    </section>
+
 
     <!-- Notifications -->
     <section id="alerts" class="module-section">
@@ -434,10 +447,28 @@ if (url.searchParams.has('success') || url.searchParams.has('error')) {
     const cleanPath = window.location.pathname;
     
     // Replace the URL in the browser's history without reloading the page
-    // This "cleans" the URL, so the message won't show up on a reload.
     window.history.replaceState({}, document.title, cleanPath);
 }
+</script>
 
+<script src="http://localhost:5001/public/vaultpay.js"></script>
+<script>
+  if (document.getElementById('pay-vaultpay-btn')) {
+    document.getElementById('pay-vaultpay-btn').addEventListener('click', () => {
+      const vaultPay = new VaultPay({
+        apiKey: 'vp_755df4b0858910bcf014b8c4', // Valid API Key for 2ndBT_Army
+        amount: 500,
+        handler: function(response) {
+          if (response.error) {
+            alert('VaultPay Error: ' + response.error);
+          } else {
+            alert('Payment Successful! Thank you. Transaction ID: ' + response.transaction.id);
+          }
+        }
+      });
+      vaultPay.open();
+    });
+  }
 </script>
 
 </body>
